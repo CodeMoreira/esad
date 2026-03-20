@@ -60,3 +60,15 @@ import { useESADState } from 'esad/client';
 
 const [token, setToken] = useESADState('auth_token');
 ```
+
+---
+
+## 🏠 Host App Features (by Default)
+
+When you run `esad init`, the generated Host App comes pre-configured with:
+
+- **🎨 NativeWind v4**: Utility-first styling ready to use with Tailwind CSS logic.
+- **🔐 Auth System**: Complete `AuthProvider` with persistent token storage using `expo-secure-store`.
+- **🛤️ Protected Routes**: Automatic redirection between `login` and `(protected)` groups based on auth state.
+- **📦 Module Loader**: A robust `lib/moduleLoader.ts` to fetch and initialize federated modules dynamically.
+- **📱 Premium UI**: A clean, modern starting point for your Super App dashboard.
