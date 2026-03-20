@@ -156,7 +156,7 @@ export default function Dashboard() {
       <Text className="text-lg font-semibold text-slate-800 mb-4">Your Modules</Text>
       
       {MOCK_MODULES.map(m => (
-        <Link key={m.id} href={\`/(protected)/module/${m.id}\`} asChild>
+        <Link key={m.id} href={\`/(protected)/module/\${m.id}\`} asChild>
           <TouchableOpacity className="bg-white p-6 rounded-2xl mb-4 shadow-sm border border-slate-100 flex-row items-center">
             <Text className="text-3xl mr-4">{m.icon}</Text>
             <View className="flex-1">
