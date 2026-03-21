@@ -18,25 +18,37 @@ program
 program
   .command('init <project-name>')
   .description('Scaffold a new ESAD workspace containing the Host App')
-  .action(initCommand);
+  .action(async (name) => {
+     await initCommand(name);
+     process.exit(0);
+  });
 
 // --- COMMAND: esad create-cdn ---
 program
   .command('create-cdn [cdn-name]')
   .description('Scaffold the CDN / Registry backend')
-  .action(createCdnCommand);
+  .action(async (name) => {
+     await createCdnCommand(name);
+     process.exit(0);
+  });
 
 // --- COMMAND: esad host ---
 program
   .command('host <subcommand>')
   .description('Manage the Host App (dev, android, ios)')
-  .action(hostCommand);
+  .action(async (sub) => {
+     await hostCommand(sub);
+     process.exit(0);
+  });
 
 // --- COMMAND: esad create-module ---
 program
   .command('create-module <module-name>')
   .description('Scaffold a React Native mini-app automatically configured for Module Federation via ESAD')
-  .action(createModuleCommand);
+  .action(async (name) => {
+     await createModuleCommand(name);
+     process.exit(0);
+  });
 
 // --- COMMAND: esad deploy ---
 program
@@ -45,14 +57,20 @@ program
   .option('-i, --id <moduleId>', 'The Module ID to deploy')
   .option('-e, --entry <entryFileName>', 'The name of the main entry bundle (e.g., index.bundle)', 'index.bundle')
   .description('Zips the local dist directory and uploads it to the configured deployment endpoint')
-  .action(deployCommand);
+  .action(async (options) => {
+     await deployCommand(options);
+     process.exit(0);
+  });
 
 // --- COMMAND: esad dev ---
 program
   .command('dev')
-  .requiredOption('-i, --id <moduleId>', 'The Module ID to run in dev mode')
+  .option('-i, --id <moduleId>', 'The Module ID to run in dev mode')
   .option('-p, --port <port>', 'The port to run the dev server on', '8081')
   .description('Starts the dev server and updates the external registry to bypass CDN')
-  .action(devCommand);
+  .action(async (options) => {
+     await devCommand(options);
+     // Note: dev command has its own shutdown logic with SIGINT/SIGTERM
+  });
 
 program.parse(process.argv);
