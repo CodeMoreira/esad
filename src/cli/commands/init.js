@@ -55,6 +55,7 @@ module.exports = async (projectName) => {
       '@rspack/core@^1.7.9',
       '@rspack/plugin-react-refresh@^1.6.1',
       '@callstack/repack-plugin-expo-modules',
+      '@react-native-community/cli',
       'nativewind',
       'tailwindcss',
       'postcss',
