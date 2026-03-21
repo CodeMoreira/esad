@@ -97,6 +97,7 @@ module.exports = async (projectName) => {
     fs.writeFileSync(path.join(hostDir, 'app/login.tsx'), templates.loginPage);
     fs.writeFileSync(path.join(hostDir, 'app/global.css'), templates.globalCss);
     fs.writeFileSync(path.join(hostDir, 'lib/moduleLoader.ts'), templates.moduleLoader);
+    fs.writeFileSync(path.join(hostDir, 'index.js'), templates.indexJs);
     fs.writeFileSync(path.join(hostDir, 'app/(protected)/index.tsx'), templates.dashboard);
     fs.writeFileSync(path.join(hostDir, 'app/(protected)/module/[id].tsx'), templates.modulePage);
 

@@ -195,5 +195,7 @@ export default function ModulePage() {
        <Text className="mt-4 text-slate-500">Loading federated module...</Text>
     </View>
   );
-}`
+}`,
+
+  indexJs: `import "expo-router/entry";`
 };
