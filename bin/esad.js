@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { program } = require('commander');
+const pkg = require('../package.json');
 
 // Import Commands
 const initCommand = require('../src/cli/commands/init');
@@ -11,7 +12,7 @@ const devCommand = require('../src/cli/commands/dev');
 const hostCommand = require('../src/cli/commands/host');
 
 program
-  .version('1.2.0')
+  .version(pkg.version)
   .description('esad - Easy Super App Development Toolkit');
 
 // --- COMMMAND: esad init ---
