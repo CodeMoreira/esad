@@ -68,15 +68,18 @@ module.exports = async (projectName) => {
     ];
     await runProcess('npm', ['install', ...deps], hostDir); 
 
+    // Re-read package.json to get the version after npm install updated it
+    const updatedPkg = fs.readJsonSync(hostPkgPath);
+
     // Update package.json scripts to delegate to ESAD CLI
-    hostPkg.scripts = {
-       ...hostPkg.scripts,
+    updatedPkg.scripts = {
+       ...updatedPkg.scripts,
        "start": "esad host start",
        "android": "esad host android",
        "ios": "esad host ios",
        "dev": "esad host dev"
     };
-    fs.writeJsonSync(hostPkgPath, hostPkg, { spaces: 2 });
+    fs.writeJsonSync(hostPkgPath, updatedPkg, { spaces: 2 });
     console.log(`✅ Abstracted package.json scripts to use ESAD CLI.`);
 
     console.log(`\n🎨 Configuring NativeWind & Tailwind...`);
