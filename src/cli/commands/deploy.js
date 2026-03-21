@@ -4,7 +4,18 @@ const AdmZip = require('adm-zip');
 const { getWorkspaceConfig } = require('../utils/config');
 
 module.exports = async (options) => {
-  console.log(`\n☁️  Starting ESAD Deploy for ${options.id} (v${options.version})\n`);
+  const pkgPath = path.join(process.cwd(), 'package.json');
+  if (!fs.existsSync(pkgPath)) {
+    console.error(`❌ Error: package.json not found.`);
+    process.exit(1);
+  }
+
+  const pkg = fs.readJsonSync(pkgPath);
+  const moduleId = options.id || pkg.name;
+  const version = options.version || pkg.version;
+  const entry = options.entry || 'index.bundle';
+
+  console.log(`\n☁️  Starting ESAD Deploy for ${moduleId} (v${version})\n`);
   
   const configObj = getWorkspaceConfig();
   if (!configObj) {
@@ -18,7 +29,7 @@ module.exports = async (options) => {
     process.exit(1);
   }
   
-  const deployUrl = config.deployEndpoint.replace('{{moduleId}}', options.id);
+  const deployUrl = config.deployEndpoint.replace('{{moduleId}}', moduleId);
   console.log(`📡 Deployment Endpoint Resolved: ${deployUrl}`);
   
   const distPath = path.join(process.cwd(), 'dist');
@@ -30,12 +41,12 @@ module.exports = async (options) => {
   const zip = new AdmZip();
   zip.addLocalFolder(distPath);
   
-  const zipPath = path.join(process.cwd(), `bundle-${options.id}-${options.version}.zip`);
+  const zipPath = path.join(process.cwd(), `bundle-${moduleId}-${version}.zip`);
   zip.writeZip(zipPath);
   console.log(`🗜️  Zipped output to ${zipPath}`);
 
   console.log(`🚀 Uploading to CDN via multipart POST...`);
-  // Example fetch upload would go here
+  // Note: Here we would use form-data + fetch or axios to upload to Simple CDN
   
   console.log(`✅ [SIMULATED] Successfully uploaded to ${deployUrl}`);
   fs.unlinkSync(zipPath);

@@ -29,6 +29,17 @@ module.exports = async (moduleName) => {
     fs.writeFileSync(path.join(targetDir, 'rspack.config.mjs'), rspackContent);
     console.log(`✅ Injected withESAD wrapper into rspack.config.mjs`);
 
+    // Update package.json scripts
+    const modPkgPath = path.join(targetDir, 'package.json');
+    const modPkg = fs.readJsonSync(modPkgPath);
+    modPkg.scripts = {
+      ...modPkg.scripts,
+      "start": "esad dev",
+      "deploy": "esad deploy"
+    };
+    fs.writeJsonSync(modPkgPath, modPkg, { spaces: 2 });
+    console.log(`✅ Abstracted module scripts to use ESAD CLI.`);
+
     console.log(`\n🎉 Module ${finalModuleName} is ready!`);
   } catch (err) {
     console.error(`❌ Failed to scaffold module`, err.message);

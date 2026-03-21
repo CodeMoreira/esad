@@ -44,12 +44,17 @@ module.exports = async (projectName) => {
     console.log(`\n📦 Scaffolding clean Expo project: ${hostName}...`);
     await runProcess('npx', ['create-expo-app', hostName, '--template', 'blank'], workspaceDir);
     
-    console.log(`\n📦 Installing ESAD and UI dependencies into host...`);
-    const hostPkg = fs.readJsonSync(path.join(hostDir, 'package.json'));
+    console.log(`\n📦 Installing ESAD, Re.Pack and UI dependencies into host...`);
+    const hostPkgPath = path.join(hostDir, 'package.json');
+    const hostPkg = fs.readJsonSync(hostPkgPath);
     const reactVersion = hostPkg.dependencies.react;
 
     const deps = [
       '@codemoreira/esad',
+      '@callstack/repack@^5.2.5',
+      '@rspack/core@^1.7.9',
+      '@rspack/plugin-react-refresh@^1.6.1',
+      '@callstack/repack-plugin-expo-modules',
       'nativewind',
       'tailwindcss',
       'postcss',
@@ -62,6 +67,17 @@ module.exports = async (projectName) => {
       `react-dom@${reactVersion}`
     ];
     await runProcess('npm', ['install', ...deps], hostDir); 
+
+    // Update package.json scripts to delegate to ESAD CLI
+    hostPkg.scripts = {
+       ...hostPkg.scripts,
+       "start": "esad host start",
+       "android": "esad host android",
+       "ios": "esad host ios",
+       "dev": "esad host dev"
+    };
+    fs.writeJsonSync(hostPkgPath, hostPkg, { spaces: 2 });
+    console.log(`✅ Abstracted package.json scripts to use ESAD CLI.`);
 
     console.log(`\n🎨 Configuring NativeWind & Tailwind...`);
     fs.writeFileSync(path.join(hostDir, 'tailwind.config.js'), templates.tailwindConfig);
