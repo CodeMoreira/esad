@@ -4,9 +4,36 @@ const AdmZip = require('adm-zip');
 const { getWorkspaceConfig } = require('../utils/config');
 
 module.exports = async (options) => {
-  const pkgPath = path.join(process.cwd(), 'package.json');
+  let cwd = process.cwd();
+  let pkgPath = path.join(cwd, 'package.json');
+  
+  // Try to find workspace config for root-level execution
+  const configObj = getWorkspaceConfig();
+  if (configObj) {
+    const workspaceRoot = path.dirname(configObj.path);
+    const { projectName } = configObj.data;
+    
+    // If ID is provided, try to find that module/host folder
+    if (options.id) {
+       const targetDir = path.join(workspaceRoot, options.id);
+       if (fs.existsSync(targetDir)) {
+         cwd = targetDir;
+         pkgPath = path.join(cwd, 'package.json');
+         console.log(`📂 Auto-detected Project folder: ${path.relative(process.cwd(), targetDir)}`);
+       }
+    } else if (!fs.existsSync(pkgPath)) {
+       // If no ID and no package.json in current dir, assume we want to deploy the host from root
+       const hostDir = path.join(workspaceRoot, `${projectName}-host`);
+       if (fs.existsSync(hostDir)) {
+          cwd = hostDir;
+          pkgPath = path.join(cwd, 'package.json');
+          console.log(`📂 Auto-detected Host App folder: ${path.relative(process.cwd(), hostDir)}`);
+       }
+    }
+  }
+
   if (!fs.existsSync(pkgPath)) {
-    console.error(`❌ Error: package.json not found.`);
+    console.error(`❌ Error: Call this command from inside a Project directory or the Workspace Root.`);
     process.exit(1);
   }
 
@@ -17,14 +44,8 @@ module.exports = async (options) => {
 
   console.log(`\n☁️  Starting ESAD Deploy for ${moduleId} (v${version})\n`);
   
-  const configObj = getWorkspaceConfig();
-  if (!configObj) {
-    console.error(`❌ Error: esad.config.json not found in current directory or parent.`);
-    process.exit(1);
-  }
-
-  const config = configObj.data;
-  if (!config.deployEndpoint) {
+  const config = configObj ? configObj.data : null;
+  if (!config?.deployEndpoint) {
     console.error(`❌ Error: 'deployEndpoint' not configured in esad.config.json.`);
     process.exit(1);
   }
@@ -32,16 +53,16 @@ module.exports = async (options) => {
   const deployUrl = config.deployEndpoint.replace('{{moduleId}}', moduleId);
   console.log(`📡 Deployment Endpoint Resolved: ${deployUrl}`);
   
-  const distPath = path.join(process.cwd(), 'dist');
+  const distPath = path.join(cwd, 'dist');
   if (!fs.existsSync(distPath)) {
-    console.error(`❌ Error: dist/ directory not found. Did you run the build command?`);
+    console.error(`❌ Error: dist/ directory not found in ${cwd}. Did you run the build command?`);
     process.exit(1);
   }
 
   const zip = new AdmZip();
   zip.addLocalFolder(distPath);
   
-  const zipPath = path.join(process.cwd(), `bundle-${moduleId}-${version}.zip`);
+  const zipPath = path.join(cwd, `bundle-${moduleId}-${version}.zip`);
   zip.writeZip(zipPath);
   console.log(`🗜️  Zipped output to ${zipPath}`);
 

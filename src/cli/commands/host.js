@@ -4,6 +4,7 @@ const fs = require('fs-extra');
 const { spawn } = require('cross-spawn');
 const http = require('http');
 const readline = require('readline');
+const { getWorkspaceConfig } = require('../utils/config');
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -13,11 +14,25 @@ const rl = readline.createInterface({
 const askQuestion = (query) => new Promise((resolve) => rl.question(query, resolve));
 
 module.exports = async (subcommand) => {
-  const cwd = process.cwd();
-  const pkgPath = path.join(cwd, 'package.json');
+  let cwd = process.cwd();
+  let pkgPath = path.join(cwd, 'package.json');
   
+  // Try to find workspace config to resolve host path from root
+  const configObj = getWorkspaceConfig();
+  if (configObj) {
+    const workspaceRoot = path.dirname(configObj.path);
+    const { projectName } = configObj.data;
+    const hostDir = path.join(workspaceRoot, `${projectName}-host`);
+    
+    if (fs.existsSync(hostDir)) {
+      cwd = hostDir;
+      pkgPath = path.join(cwd, 'package.json');
+      console.log(`📂 Auto-detected Host App folder: ${path.relative(process.cwd(), hostDir)}`);
+    }
+  }
+
   if (!fs.existsSync(pkgPath)) {
-    console.error(`❌ Error: Call this command from inside the Host App directory.`);
+    console.error(`❌ Error: Call this command from inside the Host App or the Workspace Root.`);
     return;
   }
 
@@ -85,15 +100,20 @@ module.exports = async (subcommand) => {
     // 4. Start Bundler in a New Window
     console.log(`\n🛠️ Starting Rspack Bundler in a new window...`);
     if (process.platform === 'win32') {
-      // Use CMD /C START to open a new window
-      spawn('cmd', ['/c', 'start', 'npx', 'react-native', 'webpack-start'], { 
+      // Use CMD /C START /D <dir> to open a new window in the correct folder
+      spawn('cmd', ['/c', 'start', '/D', cwd, 'npx', 'react-native', 'webpack-start'], { 
         detached: true, 
         stdio: 'ignore',
         shell: true 
       }).unref();
     } else {
       // For MacOS or Linux
-      spawn('npx', ['react-native', 'webpack-start'], { detached: true, stdio: 'inherit', shell: true }).unref();
+      spawn('npx', ['react-native', 'webpack-start'], { 
+        cwd, 
+        detached: true, 
+        stdio: 'inherit', 
+        shell: true 
+      }).unref();
     }
 
     // 5. Wait for Bundler (Port 8081)

@@ -4,12 +4,34 @@ const fs = require('fs-extra');
 const path = require('path');
 
 module.exports = async (options) => {
-  const pkgPath = path.join(process.cwd(), 'package.json');
-  if (!fs.existsSync(pkgPath)) {
-    console.error(`❌ Error: Call this command from inside a Host or Module directory.`);
-    return;
-  }
+  let cwd = process.cwd();
+  let pkgPath = path.join(cwd, 'package.json');
   
+  // Try to find workspace config for root-level execution
+  const configObj = getWorkspaceConfig();
+  if (configObj) {
+    const workspaceRoot = path.dirname(configObj.path);
+    const { projectName } = configObj.data;
+    
+    if (options.id) {
+       // Target a specific module
+       const moduleDir = path.join(workspaceRoot, options.id);
+       if (fs.existsSync(moduleDir)) {
+         cwd = moduleDir;
+         pkgPath = path.join(cwd, 'package.json');
+         console.log(`📂 Auto-detected Module folder: ${path.relative(process.cwd(), moduleDir)}`);
+       }
+    } else {
+       // Target host by default if in root
+       const hostDir = path.join(workspaceRoot, `${projectName}-host`);
+       if (fs.existsSync(hostDir)) {
+          cwd = hostDir;
+          pkgPath = path.join(cwd, 'package.json');
+          console.log(`📂 Auto-detected Host App folder: ${path.relative(process.cwd(), hostDir)}`);
+       }
+    }
+  }
+
   const pkg = fs.readJsonSync(pkgPath);
   const moduleId = options.id || pkg.name;
   const port = options.port || '8081';
@@ -19,13 +41,12 @@ module.exports = async (options) => {
   
   if (isHost && !options.id) {
      console.log(`\n🚀 Starting Host App Dev Server (Re.Pack/Rspack)...\n`);
-     await spawn('npx', ['react-native', 'webpack-start'], { stdio: 'inherit', shell: true });
+     await spawn('npx', ['react-native', 'webpack-start'], { cwd, stdio: 'inherit', shell: true });
      return;
   }
 
   console.log(`\n⚡ Starting ESAD Dev Server for ${moduleId} on port ${port}...\n`);
   
-  const configObj = getWorkspaceConfig();
   const config = configObj ? configObj.data : null;
   let devApiUrl = config?.devModeEndpoint ? config.devModeEndpoint.replace('{{moduleId}}', moduleId) : null;
 
@@ -43,7 +64,7 @@ module.exports = async (options) => {
 
   await setDevMode(true);
 
-  const proc = spawn('npx', ['react-native', 'webpack-start', '--port', port], { stdio: 'inherit', shell: true });
+  const proc = spawn('npx', ['react-native', 'webpack-start', '--port', port], { cwd, stdio: 'inherit', shell: true });
 
   const shutdown = async () => {
     console.log(`\n🛑 Parando ESAD Dev Server e revertendo o registro na CDN...`);
