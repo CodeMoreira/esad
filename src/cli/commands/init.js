@@ -45,6 +45,9 @@ module.exports = async (projectName) => {
     await runProcess('npx', ['create-expo-app', hostName, '--template', 'blank'], workspaceDir);
     
     console.log(`\n📦 Installing ESAD and UI dependencies into host...`);
+    const hostPkg = fs.readJsonSync(path.join(hostDir, 'package.json'));
+    const reactVersion = hostPkg.dependencies.react;
+
     const deps = [
       '@codemoreira/esad',
       'nativewind',
@@ -55,7 +58,8 @@ module.exports = async (projectName) => {
       'react-native-reanimated',
       'react-native-safe-area-context',
       'react-native-screens',
-      'expo-router'
+      'expo-router',
+      `react-dom@${reactVersion}`
     ];
     await runProcess('npm', ['install', ...deps], hostDir); 
 

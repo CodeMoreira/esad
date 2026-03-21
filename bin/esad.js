@@ -10,7 +10,7 @@ const deployCommand = require('../src/cli/commands/deploy');
 const devCommand = require('../src/cli/commands/dev');
 
 program
-  .version('1.1.2')
+  .version('1.1.3')
   .description('esad - Easy Super App Development Toolkit');
 
 // --- COMMMAND: esad init ---
