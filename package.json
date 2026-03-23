@@ -3,10 +3,20 @@
   "version": "1.2.4",
   "description": "Easy Super App Development - Zero-Config CLI and DevTools for React Native Module Federation",
   "main": "src/plugin/index.js",
+  "types": "./src/plugin/index.d.ts",
   "exports": {
-    ".": "./src/plugin/index.js",
-    "./plugin": "./src/plugin/index.js",
-    "./client": "./src/client/index.js"
+    ".": {
+      "types": "./src/plugin/index.d.ts",
+      "default": "./src/plugin/index.js"
+    },
+    "./plugin": {
+      "types": "./src/plugin/index.d.ts",
+      "default": "./src/plugin/index.js"
+    },
+    "./client": {
+      "types": "./src/client/index.d.ts",
+      "default": "./src/client/index.js"
+    }
   },
   "bin": {
     "esad": "./bin/esad.js"
@@ -26,5 +36,9 @@
     "cross-spawn": "^7.0.3",
     "fs-extra": "^11.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@rspack/core": "^1.7.9",
+    "@types/react": "^19.2.14",
+    "@types/react-native": "^0.72.8"
+  }
 }
