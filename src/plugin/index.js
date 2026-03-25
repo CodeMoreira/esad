@@ -29,6 +29,9 @@ function withESAD(env, options) {
   const config = {
     context: dirname,
     entry: options.entry || './index.js',
+    output: {
+      ...Repack.getOutputOptions(env),
+    },
     resolve: {
       ...Repack.getResolveOptions(),
       alias: {
