@@ -18,20 +18,19 @@ const { ProvidePlugin, DefinePlugin } = require('@rspack/core');
  * @param {Object} [options.remotes] Remote modules (for host)
  */
 function withESAD(env, options) {
-  const isDev = env.dev !== false;
+  const { platform, dev } = env;
+  const isDev = dev !== false;
   const dirname = options.dirname;
   const pkgPath = path.resolve(dirname, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const id = options.id.replace(/-/g, '_');
 
-  console.log(`[ESAD] Applying Mega-Zero-Config profile for ${options.type.toUpperCase()}: ${id}`);
+  console.log(`[ESAD] Applying Mega-Zero-Config profile for ${options.type.toUpperCase()} (${platform}): ${id}`);
 
   const config = {
+    mode: isDev ? 'development' : 'production',
     context: dirname,
     entry: options.entry || './index.js',
-    output: {
-      ...Repack.getOutputOptions(env),
-    },
     resolve: {
       ...Repack.getResolveOptions(),
       alias: {
@@ -45,7 +44,7 @@ function withESAD(env, options) {
         '@codemoreira/esad/client': path.resolve(dirname, 'node_modules/@codemoreira/esad/src/client/index.js'),
         
         ...Repack.getResolveOptions().alias,
-        ...options.alias,
+        ...(options.alias || {}),
       }
     },
     module: {
@@ -87,7 +86,7 @@ function withESAD(env, options) {
         name: id,
         filename: `${id}.container.js.bundle`,
         remotes: options.remotes || {},
-        exposes: options.exposes || {},
+        ...(options.type === 'module' ? { exposes: options.exposes || {} } : {}),
         dts: false,
         dev: isDev,
         shared: {
@@ -96,7 +95,7 @@ function withESAD(env, options) {
           'react-native': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native'] },
           'react-native-safe-area-context': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native-safe-area-context'] },
           '@codemoreira/esad': { singleton: true, eager: true },
-          ...options.shared
+          ...(options.shared || {})
         }
       })
     ],
