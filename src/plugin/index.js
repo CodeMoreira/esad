@@ -1,41 +1,126 @@
+const path = require('node:path');
+const fs = require('node:fs');
 const Repack = require('@callstack/repack');
+const { ExpoModulesPlugin } = require('@callstack/repack-plugin-expo-modules');
+const { ProvidePlugin, DefinePlugin } = require('@rspack/core');
 
 /**
  * ESAD Re.Pack Plugin Wrapper
- * Abstracts away the boilerplate of Module Federation for SuperApps.
+ * Abstracts away the boilerplate of Module Federation and SDK integration for SuperApps.
  * 
+ * @param {Object} env Rspack environment
  * @param {Object} options 
  * @param {string} options.type 'host' | 'module'
  * @param {string} options.id Unique module or host ID
+ * @param {string} options.dirname Base directory (__dirname)
+ * @param {Object} [options.shared] Additional shared dependencies
+ * @param {Object} [options.exposes] Modules to expose (for modules)
+ * @param {Object} [options.remotes] Remote modules (for host)
  */
-function withESAD(options) {
-  return (env) => {
-    // In a real scenario, we merge heavily with Repack.getTemplateConfig here
-    console.log(`[ESAD Plugin] Applying Zero-Config Re.Pack profile for ${options.type.toUpperCase()}: ${options.id}`);
-    
-    // Ensure the esad state library is ALWAYS shared
-    const sharedConfig = {
-      react: { singleton: true, eager: options.type === 'host' },
-      'react-native': { singleton: true, eager: options.type === 'host' },
-      'esad/client': { singleton: true, eager: true } // Crucial for Global State
-    };
+function withESAD(env, options) {
+  const isDev = env.dev !== false;
+  const dirname = options.dirname;
+  const pkgPath = path.resolve(dirname, 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  const id = options.id.replace(/-/g, '_');
 
-    return {
-      // Configuration abstraction
-      plugins: [
-        new Repack.plugins.ModuleFederationPlugin({
-          name: options.id.replace(/-/g, '_'),
-          shared: sharedConfig,
-          // If type is module, also configure exposes
-          ...(options.type === 'module' && {
-            exposes: {
-              './App': './src/App'
-            }
-          })
-        })
-      ]
-    };
+  console.log(`[ESAD] Applying Mega-Zero-Config profile for ${options.type.toUpperCase()}: ${id}`);
+
+  const config = {
+    context: dirname,
+    entry: options.entry || './index.js',
+    resolve: {
+      ...Repack.getResolveOptions(),
+      alias: {
+        '@': path.resolve(dirname, '.'),
+        // Internal MFv2 & Re.Pack Aliases (Magic)
+        '@module-federation/runtime/helpers': path.resolve(dirname, 'node_modules/@module-federation/runtime/dist/helpers.js'),
+        '@module-federation/error-codes/browser': path.resolve(dirname, 'node_modules/@module-federation/error-codes/dist/browser.cjs'),
+        '@module-federation/sdk': path.resolve(dirname, 'node_modules/@module-federation/sdk'),
+        
+        // ESAD SDK Aliases (Zero-Config)
+        '@codemoreira/esad/client': path.resolve(dirname, 'node_modules/@codemoreira/esad/src/client/index.js'),
+        
+        ...Repack.getResolveOptions().alias,
+        ...options.alias,
+      }
+    },
+    module: {
+      rules: [
+        {
+          oneOf: [
+            {
+              test: /\.[cm]?[jt]sx?$/,
+              include: [
+                /node_modules[\\/]react-native/,
+                /node_modules[\\/]@react-native/,
+              ],
+              type: 'javascript/auto',
+              use: {
+                loader: '@callstack/repack/babel-swc-loader',
+                options: {
+                  sourceMaps: true,
+                  parallel: true,
+                },
+              },
+            },
+            ...Repack.getJsTransformRules(),
+          ]
+        },
+        ...Repack.getAssetTransformRules(),
+      ],
+    },
+    plugins: [
+      new ProvidePlugin({
+        process: 'process/browser',
+      }),
+      new DefinePlugin({
+        'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
+        '__DEV__': JSON.stringify(isDev),
+      }),
+      new ExpoModulesPlugin(),
+      new Repack.RepackPlugin(),
+      new Repack.plugins.ModuleFederationPluginV2({
+        name: id,
+        filename: `${id}.container.js.bundle`,
+        remotes: options.remotes || {},
+        exposes: options.exposes || {},
+        dts: false,
+        dev: isDev,
+        shared: {
+          'react': { singleton: true, eager: true, requiredVersion: pkg.dependencies.react },
+          'react/jsx-runtime': { singleton: true, eager: true, requiredVersion: pkg.dependencies.react },
+          'react-native': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native'] },
+          'react-native-safe-area-context': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native-safe-area-context'] },
+          '@codemoreira/esad': { singleton: true, eager: true },
+          ...options.shared
+        }
+      })
+    ],
   };
+
+  // Add Host-specific DevServer magic for Expo
+  if (options.type === 'host') {
+    config.devServer = {
+      setupMiddlewares: (middlewares) => {
+        middlewares.unshift((req, res, next) => {
+          if (req.url.startsWith('/.expo/.virtual-metro-entry.bundle')) {
+            const query = req.url.split('?')[1];
+            const isMap = req.url.includes('.map');
+            const target = isMap ? '/index.bundle.map' : '/index.bundle';
+            const location = query ? `${target}?${query}` : target;
+            res.writeHead(302, { Location: location });
+            res.end();
+            return;
+          }
+          next();
+        });
+        return middlewares;
+      },
+    };
+  }
+
+  return config;
 }
 
 module.exports = { withESAD };
