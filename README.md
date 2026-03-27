@@ -9,28 +9,30 @@ ESAD is a unified toolkit designed to abstract all the complexity from Super App
 ## 🏗️ CLI Commands
 
 ### 1. Initialize a Workspace
-Clones the official Host Template and sets up a global workspace configuration.
 ```bash
 npx @codemoreira/esad init my-project
 ```
 
 ### 2. Create a Federated Module
-Clones the official Module Template and correctly configures it to join the Super App.
 ```bash
-npx esad create-module module-rh
+npx esad create-module module-name
 ```
 
-### 3. Development Mode
-Starts the local Rspack server and **automatically** prepares native folders (`android/ios`) with necessary Re.Pack patches (Gradle, Entry Points).
+### 3. Create a Local CDN / Registry
 ```bash
-npx esad host dev  # To run the Host
-npx esad dev --id module-rh --port 9000  # To run a Module
+npx esad create-cdn
 ```
 
-### 4. Deployment
-Builds, zips, and uploads the module bundle to the configured CDN registry.
+### 4. Development & Native Automation
+Starts the Rspack server and **automatically patches** native files (Gradle, Entry Points) if necessary.
 ```bash
-npx esad deploy --id module-rh --version 1.0.0
+npx esad host dev  # Run the Host App
+npx esad dev --id module-name --port 9000  # Run a Module
+```
+
+### 5. Deployment
+```bash
+npx esad deploy --id module-name --version 1.0.0
 ```
 
 ---
@@ -38,7 +40,7 @@ npx esad deploy --id module-rh --version 1.0.0
 ## 🛠️ Library Usage
 
 ### 🎨 Bundler Plugin (`@codemoreira/esad/plugin`)
-In your `rspack.config.mjs`, simplify everything:
+Wrap your configuration to enable ESAD's smart resolution and redirection logic:
 ```javascript
 import { withESAD } from '@codemoreira/esad/plugin';
 
@@ -48,30 +50,26 @@ export default withESAD({
 });
 ```
 
-### ⚡ Global State Hook (`@codemoreira/esad/client`)
-Share state across different modules and the Host instantly and reactively:
+### ⚡ Global State SDK (`@codemoreira/esad/client`)
+Share state across the Host and all Remote Modules reactively:
 ```javascript
 import { useESADState } from '@codemoreira/esad/client';
 
-const [token, setToken] = useESADState('auth_token');
+const [user, setUser] = useESADState('user');
 ```
 
 ---
 
 ## 🏠 Template Features (Host & Module)
 
-ESAD now uses a **Template-Based Scaffolding** system. Creating a project via CLI clones:
-- [esad-template-host](https://github.com/CodeMoreira/esad-template-host)
-- [esad-template-module](https://github.com/CodeMoreira/esad-template-module)
-
-**Features included by default:**
-- **🚀 Rspack + Re.Pack**: Blazing fast builds with Module Federation v2.
-- **🎨 NativeWind v4**: Utility-first styling with Tailwind CSS logic.
-- **🔐 Auth System**: Complete `AuthProvider` with `expo-secure-store`.
-- **🛤️ Protected Routes**: Automatic redirection logic.
-- **📦 Module Loader**: Robust dynamic remote loading via ESAD Registry.
+ESAD provides high-quality, boilerplate-free templates:
+- **🚀 Rspack + Re.Pack**: Blazing fast builds powered by Rspack.
+- **📱 Clean UI**: Modern, responsive designs built with **Vanilla StyleSheet** (No external CSS libraries required).
+- **🛤️ Dynamic Navigation**: Pre-configured Dashboard and Module Viewer with **Suspense** support.
+- **🔐 State-Driven Auth**: Built-in login and session management via the ESAD SDK.
+- **🔧 Automated Patching**: CLI-driven injection of Re.Pack extensions into Android and iOS native projects.
 
 ---
 
 ## 🎨 Architecture & Workflow
-For a detailed view of the system's architecture and development cycles, see [ESAD_ARCHITECTURE.md](./ESAD_ARCHITECTURE.md).
+For technical diagrams and the modular deployment lifecycle, see [ESAD_ARCHITECTURE.md](./ESAD_ARCHITECTURE.md).
