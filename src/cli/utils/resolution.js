@@ -39,7 +39,7 @@ function listAvailableModules(configObj) {
   
   const entries = fs.readdirSync(workspaceRoot, { withFileTypes: true });
   const modules = entries
-    .filter(e => e.isDirectory() && e.name.startsWith(projectName))
+    .filter(e => e.isDirectory() && e.name.startsWith(projectName) && !e.name.endsWith('-host') && !e.name.endsWith('-cdn'))
     .map(e => {
       const name = e.name.replace(`${projectName}-`, '');
       return name;
