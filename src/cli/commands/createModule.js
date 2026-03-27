@@ -2,6 +2,8 @@ const fs = require('fs-extra');
 const path = require('path');
 const { runProcess } = require('../utils/process');
 const { getWorkspaceConfig } = require('../utils/config');
+const { cloneTemplate, renameProject } = require('../utils/scaffold');
+const templatesConfig = require('../templates/templates.json');
 
 module.exports = async (moduleName) => {
   const configObj = getWorkspaceConfig();
@@ -20,25 +22,14 @@ module.exports = async (moduleName) => {
   console.log(`\n📦 Creating federated mini-app: ${finalModuleName}...\n`);
   
   try {
-    await runProcess('npx', ['react-native@latest', 'init', finalModuleName], workspaceDir);
-    console.log(`\n📦 Installing ESAD dependencies...`);
-    // Note: Assuming local link or npm install depends on final workflow
-    await runProcess('npm', ['install', '@codemoreira/esad'], targetDir);
+    // 1. Clone Template instead of react-native init
+    await cloneTemplate(templatesConfig.module, targetDir);
+    
+    // 2. Rename Project
+    await renameProject(targetDir, finalModuleName);
 
-    const rspackContent = `import { withESAD } from '@codemoreira/esad/plugin';\n\nexport default withESAD({\n  type: 'module',\n  id: '${finalModuleName}'\n});\n`
-    fs.writeFileSync(path.join(targetDir, 'rspack.config.mjs'), rspackContent);
-    console.log(`✅ Injected withESAD wrapper into rspack.config.mjs`);
-
-    // Update package.json scripts
-    const modPkgPath = path.join(targetDir, 'package.json');
-    const modPkg = fs.readJsonSync(modPkgPath);
-    modPkg.scripts = {
-      ...modPkg.scripts,
-      "start": "esad dev",
-      "deploy": "esad deploy"
-    };
-    fs.writeJsonSync(modPkgPath, modPkg, { spaces: 2 });
-    console.log(`✅ Abstracted module scripts to use ESAD CLI.`);
+    console.log(`\n📦 Installing dependencies...`);
+    await runProcess('npm', ['install'], targetDir);
 
     console.log(`\n🎉 Module ${finalModuleName} is ready!`);
   } catch (err) {

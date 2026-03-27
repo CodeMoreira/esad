@@ -5,6 +5,7 @@ const { spawn } = require('cross-spawn');
 const http = require('http');
 const readline = require('readline');
 const { getWorkspaceConfig } = require('../utils/config');
+const { prepareNative } = require('../utils/scaffold');
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -38,48 +39,9 @@ module.exports = async (subcommand) => {
 
   const pkg = fs.readJsonSync(pkgPath);
 
-  // 1. Initial Checks & Prebuild
+  // 1. Initial Checks & Automated Native Preparation
   if (subcommand === 'dev' || subcommand === 'start') {
-    if (!fs.existsSync(path.join(cwd, 'android')) && !fs.existsSync(path.join(cwd, 'ios'))) {
-      console.log(`📦 Native folders not found. Running expo prebuild...`);
-      await runProcess('npx', ['expo', 'prebuild'], cwd);
-    }
-
-    // 2. Patch Native Files
-    console.log(`🔧 Patching native files for Re.Pack compatibility...`);
-    const patchFiles = async () => {
-      // Android
-      const androidMainApp = path.join(cwd, 'android/app/src/main/java');
-      if (fs.existsSync(androidMainApp)) {
-        const files = await fs.readdir(androidMainApp, { recursive: true });
-        for (const file of files) {
-          if (file.endsWith('MainApplication.kt') || file.endsWith('MainApplication.java')) {
-            const filePath = path.join(androidMainApp, file);
-            let content = await fs.readFile(filePath, 'utf8');
-            if (content.includes('.expo/.virtual-metro-entry')) {
-              content = content.replace(/.expo\/.virtual-metro-entry/g, 'index');
-              await fs.writeFile(filePath, content);
-            }
-          }
-        }
-      }
-      // iOS
-      const iosDir = path.join(cwd, 'ios');
-      if (fs.existsSync(iosDir)) {
-        const iosFiles = await fs.readdir(iosDir, { recursive: true });
-        for (const file of iosFiles) {
-          if (file.match(/AppDelegate\.(m|mm|swift)/)) {
-            const filePath = path.join(iosDir, file);
-            let content = await fs.readFile(filePath, 'utf8');
-            if (content.includes('.expo/.virtual-metro-entry')) {
-              content = content.replace(/.expo\/.virtual-metro-entry/g, 'index');
-              await fs.writeFile(filePath, content);
-            }
-          }
-        }
-      }
-    };
-    await patchFiles();
+    await prepareNative(cwd, 'all');
 
     // 3. Platform Selection
     console.log(`\nESAD Host Dev Manager`);

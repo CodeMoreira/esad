@@ -2,6 +2,7 @@ const { spawn } = require('cross-spawn');
 const { getWorkspaceConfig } = require('../utils/config');
 const fs = require('fs-extra');
 const path = require('path');
+const { prepareNative } = require('../utils/scaffold');
 
 module.exports = async (options) => {
   let cwd = process.cwd();
@@ -39,6 +40,9 @@ module.exports = async (options) => {
   // Determine if it's a Host or Module
   const isHost = pkg.name.endsWith('-host') || pkg.dependencies?.['@callstack/repack'];
   
+  // 1. Initial Checks & Automated Native Preparation
+  await prepareNative(cwd, 'all');
+
   if (isHost && !options.id) {
      console.log(`\n🚀 Starting Host App Dev Server (Re.Pack/Rspack)...\n`);
      await spawn('npx', ['react-native', 'webpack-start'], { cwd, stdio: 'inherit', shell: true });
