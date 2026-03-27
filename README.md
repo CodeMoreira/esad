@@ -1,51 +1,46 @@
 # ESAD (Easy Super App Development) 🚀
 
-Zero-Config CLI and DevTools for React Native Module Federation.
+Zero-Config CLI and DevTools for React Native Module Federation + Expo.
 
-ESAD is a unified toolkit designed to abstract all the complexity from Super App development using **Re.Pack (Webpack)** and **React Native**.
+ESAD is a unified toolkit designed to abstract all the complexity from Super App development using **Re.Pack (Rspack)** and **Expo**.
 
 ---
 
-## 🏗️ Commands
+## 🏗️ CLI Commands
 
 ### 1. Initialize a Workspace
-Creates a main project folder with a Host (Expo-ready) and a global configuration.
+Clones the official Host Template and sets up a global workspace configuration.
 ```bash
 npx @codemoreira/esad init my-project
 ```
 
 ### 2. Create a Federated Module
-Scaffolds a new mini-app correctly named and configured to join the Super App.
+Clones the official Module Template and correctly configures it to join the Super App.
 ```bash
 npx esad create-module module-rh
 ```
 
-### 3. Create a Service Registry / CDN
-Sets up the backend registry used for dynamic routing and file hosting.
+### 3. Development Mode
+Starts the local Rspack server and **automatically** prepares native folders (`android/ios`) with necessary Re.Pack patches (Gradle, Entry Points).
 ```bash
-npx esad create-cdn
+npx esad host dev  # To run the Host
+npx esad dev --id module-rh --port 9000  # To run a Module
 ```
 
-### 4. Development Mode (Real-time HMR)
-Starts the local packager and **automatically** notifies the Registry to bypass the CDN, so your Host App sees your local changes instantly.
+### 4. Deployment
+Builds, zips, and uploads the module bundle to the configured CDN registry.
 ```bash
-npx esad dev --id module-rh --port 8081
-```
-
-### 5. Deployment
-Builds, zips, and uploads the module bundle to the configured CDN endpoint.
-```bash
-npx esad deploy --id module-rh --version 1.0.0 --entry index.bundle
+npx esad deploy --id module-rh --version 1.0.0
 ```
 
 ---
 
 ## 🛠️ Library Usage
 
-### 🎨 Bundler Plugin (`esad/plugin`)
+### 🎨 Bundler Plugin (`@codemoreira/esad/plugin`)
 In your `rspack.config.mjs`, simplify everything:
 ```javascript
-import { withESAD } from 'esad/plugin';
+import { withESAD } from '@codemoreira/esad/plugin';
 
 export default withESAD({
   type: 'module', // or 'host'
@@ -53,22 +48,30 @@ export default withESAD({
 });
 ```
 
-### ⚡ Global State Hook (`esad/client`)
-Share state across different modules and the Host instantly and reatively:
+### ⚡ Global State Hook (`@codemoreira/esad/client`)
+Share state across different modules and the Host instantly and reactively:
 ```javascript
-import { useESADState } from 'esad/client';
+import { useESADState } from '@codemoreira/esad/client';
 
 const [token, setToken] = useESADState('auth_token');
 ```
 
 ---
 
-## 🏠 Host App Features (by Default)
+## 🏠 Template Features (Host & Module)
 
-When you run `esad init`, the generated Host App comes pre-configured with:
+ESAD now uses a **Template-Based Scaffolding** system. Creating a project via CLI clones:
+- [esad-template-host](https://github.com/CodeMoreira/esad-template-host)
+- [esad-template-module](https://github.com/CodeMoreira/esad-template-module)
 
-- **🎨 NativeWind v4**: Utility-first styling ready to use with Tailwind CSS logic.
-- **🔐 Auth System**: Complete `AuthProvider` with persistent token storage using `expo-secure-store`.
-- **🛤️ Protected Routes**: Automatic redirection between `login` and `(protected)` groups based on auth state.
-- **📦 Module Loader**: A robust `lib/moduleLoader.ts` to fetch and initialize federated modules dynamically.
-- **📱 Premium UI**: A clean, modern starting point for your Super App dashboard.
+**Features included by default:**
+- **🚀 Rspack + Re.Pack**: Blazing fast builds with Module Federation v2.
+- **🎨 NativeWind v4**: Utility-first styling with Tailwind CSS logic.
+- **🔐 Auth System**: Complete `AuthProvider` with `expo-secure-store`.
+- **🛤️ Protected Routes**: Automatic redirection logic.
+- **📦 Module Loader**: Robust dynamic remote loading via ESAD Registry.
+
+---
+
+## 🎨 Architecture & Workflow
+For a detailed view of the system's architecture and development cycles, see [ESAD_ARCHITECTURE.md](./ESAD_ARCHITECTURE.md).
