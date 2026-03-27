@@ -40,9 +40,6 @@ function withESAD(env, options) {
         '@module-federation/error-codes/browser': path.resolve(dirname, 'node_modules/@module-federation/error-codes/dist/browser.cjs'),
         '@module-federation/sdk': path.resolve(dirname, 'node_modules/@module-federation/sdk'),
         
-        // ESAD SDK Aliases (Zero-Config)
-        '@codemoreira/esad/client': path.resolve(dirname, 'node_modules/@codemoreira/esad/src/client/index.js'),
-        
         ...Repack.getResolveOptions().alias,
         ...(options.alias || {}),
       }
@@ -94,6 +91,7 @@ function withESAD(env, options) {
           'react/jsx-runtime': { singleton: true, eager: true, requiredVersion: pkg.dependencies.react },
           'react-native': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native'] },
           'react-native-safe-area-context': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native-safe-area-context'] },
+          '@codemoreira/esad/client': { singleton: true, eager: true },
           '@codemoreira/esad': { singleton: true, eager: true },
           ...(options.shared || {})
         }
