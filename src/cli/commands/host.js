@@ -14,6 +14,19 @@ const rl = readline.createInterface({
 
 const askQuestion = (query) => new Promise((resolve) => rl.question(query, resolve));
 
+/**
+ * Check if a port is in use
+ */
+const isPortInUse = (port) => new Promise((resolve) => {
+  const req = http.get(`http://localhost:${port}`, (res) => {
+    resolve(true); // Responded, so it's in use
+  });
+  req.on('error', () => {
+    resolve(false); // Refused, so it's free
+  });
+  req.end();
+});
+
 module.exports = async (subcommand) => {
   let cwd = process.cwd();
   let pkgPath = path.join(cwd, 'package.json');
@@ -59,60 +72,66 @@ module.exports = async (subcommand) => {
       return;
     }
 
-    // 4. Start Bundler in a New Window
-    console.log(`\n🛠️ Starting Rspack Bundler in a new window...`);
-    if (process.platform === 'win32') {
-      // Use CMD /C START /D <dir> to open a new window in the correct folder
-      spawn('cmd', ['/c', 'start', '/D', cwd, 'npx', 'react-native', 'webpack-start'], { 
-        detached: true, 
-        stdio: 'ignore',
-        shell: true 
-      }).unref();
-    } else {
-      // For MacOS or Linux
-      spawn('npx', ['react-native', 'webpack-start'], { 
-        cwd, 
-        detached: true, 
-        stdio: 'inherit', 
-        shell: true 
-      }).unref();
+    // 4. Check for Port 8081
+    const portBusy = await isPortInUse(8081);
+    let shouldStartBundler = true;
+
+    if (portBusy) {
+      console.log(`\n⚠️  Warning: Port 8081 is already in use by another process.`);
+      console.log(`💡 Skipping Bundler startup - assuming it's already running. Proceeding with Native Build only.\n`);
+      shouldStartBundler = false;
     }
 
-    // 5. Wait for Bundler (Port 8081)
-    console.log(`⏳ Waiting for Rspack Bundler to initialize on port 8081...`);
-    const waitForBundler = async () => {
-      for (let i = 0; i < 30; i++) {
-        try {
-          await new Promise((resolve, reject) => {
-            const req = http.get('http://localhost:8081', (res) => resolve(res));
-            req.on('error', reject);
-            req.end();
-          });
-          return true;
-        } catch (e) {
+    // 4. Start Bundler in a New Window (if needed)
+    if (shouldStartBundler && choice !== 'c') {
+      console.log(`\n🛠️ Starting Rspack Bundler in a new window...`);
+      if (process.platform === 'win32') {
+        spawn('cmd', ['/c', 'start', '/D', cwd, 'npx', 'react-native', 'webpack-start'], { 
+          detached: true, 
+          stdio: 'ignore',
+          shell: true 
+        }).unref();
+      } else {
+        spawn('npx', ['react-native', 'webpack-start'], { 
+          cwd, 
+          detached: true, 
+          stdio: 'inherit', 
+          shell: true 
+        }).unref();
+      }
+
+      // 5. Wait for Bundler (Port 8081)
+      console.log(`⏳ Waiting for Rspack Bundler to initialize on port 8081...`);
+      const waitForBundler = async () => {
+        for (let i = 0; i < 30; i++) {
+          if (await isPortInUse(8081)) return true;
           await new Promise(r => setTimeout(r, 2000));
         }
-      }
-      return false;
-    };
+        return false;
+      };
 
-    const isReady = await waitForBundler();
-    if (!isReady) {
-      console.error(`\n❌ Timeout: Bundler did not respond after 60 seconds.`);
-      rl.close();
-      return;
+      const isReady = await waitForBundler();
+      if (!isReady) {
+        console.error(`\n❌ Timeout: Bundler did not respond after 60 seconds.`);
+        rl.close();
+        return;
+      }
+      console.log(`✅ Bundler stable and ready to use!`);
     }
-    console.log(`✅ Bundler stable and ready to use!`);
 
     // 6. Launch Native App
     if (choice === 'a') {
-      console.log(`🤖 Compiling and sending to Android...`);
+      console.log(`🤖 Compiling and launching on Android...`);
       await runProcess('npx', ['expo', 'run:android', '--no-bundler'], cwd);
     } else if (choice === 'i') {
-      console.log(`🍎 Compiling and sending to iOS...`);
+      console.log(`🍎 Compiling and launching on iOS...`);
       await runProcess('npx', ['expo', 'run:ios', '--no-bundler'], cwd);
     } else if (choice === 'b') {
-      console.log(`✨ Bundler is running. You can open the app manually.`);
+      if (portBusy) {
+        console.log(`✨ Bundler is already active. You can launch manual native runs.`);
+      } else {
+        console.log(`✨ Bundler is running. You can open the app manually.`);
+      }
     }
 
     rl.close();

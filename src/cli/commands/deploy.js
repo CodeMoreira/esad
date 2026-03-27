@@ -12,7 +12,7 @@ module.exports = async (options) => {
   // Enforce Workspace Root
   const configObj = getWorkspaceConfig();
   if (!configObj) {
-    console.error(chalk.red(`❌ Erro: Comando deve ser executado na raiz do projeto (esad.config.json não encontrado).`));
+    console.error(chalk.red(`❌ Error: Call this command from the project root (esad.config.json not found).`));
     process.exit(1);
   }
 
@@ -22,25 +22,25 @@ module.exports = async (options) => {
   if (options.id) {
     const targetDir = resolveProjectDir(options.id, configObj);
     if (!targetDir) {
-      console.error(chalk.red(`\n❌ Erro: Não foi encontrado o módulo: ${options.id}`));
+      console.error(chalk.red(`\n❌ Error: Module not found: ${options.id}`));
       listAvailableModules(configObj);
       process.exit(1);
     }
     cwd = targetDir;
     pkgPath = path.join(cwd, 'package.json');
-    console.log(chalk.green(`📂 Módulo detectado para Deploy: ${path.relative(workspaceRoot, cwd)}`));
+    console.log(chalk.green(`📂 Module detected for Deploy: ${path.relative(workspaceRoot, cwd)}`));
   } else {
     // Target host by default if in root
     const hostDir = path.join(workspaceRoot, `${projectName}-host`);
     if (fs.existsSync(hostDir)) {
       cwd = hostDir;
       pkgPath = path.join(cwd, 'package.json');
-      console.log(chalk.green(`📂 Host detectado para Deploy: ${path.relative(workspaceRoot, cwd)}`));
+      console.log(chalk.green(`📂 Host detected for Deploy: ${path.relative(workspaceRoot, cwd)}`));
     }
   }
 
   if (!fs.existsSync(pkgPath)) {
-    console.error(chalk.red(`❌ Erro: Arquivo package.json não encontrado em ${cwd}.`));
+    console.error(chalk.red(`❌ Error: package.json not found in ${cwd}.`));
     process.exit(1);
   }
 

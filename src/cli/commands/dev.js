@@ -13,7 +13,7 @@ module.exports = async (options) => {
   // Enforce Workspace Root
   const configObj = getWorkspaceConfig();
   if (!configObj) {
-    console.error(chalk.red(`❌ Erro: Comando deve ser executado na raiz do projeto (esad.config.json não encontrado).`));
+    console.error(chalk.red(`❌ Error: Call this command from the project root (esad.config.json not found).`));
     process.exit(1);
   }
 
@@ -23,20 +23,20 @@ module.exports = async (options) => {
   if (options.id) {
     const targetDir = resolveProjectDir(options.id, configObj);
     if (!targetDir) {
-      console.error(chalk.red(`\n❌ Erro: Não foi encontrado o módulo: ${options.id}`));
+      console.error(chalk.red(`\n❌ Error: Module not found: ${options.id}`));
       listAvailableModules(configObj);
       process.exit(1);
     }
     cwd = targetDir;
     pkgPath = path.join(cwd, 'package.json');
-    console.log(chalk.green(`📂 Módulo detectado: ${path.relative(workspaceRoot, cwd)}`));
+    console.log(chalk.green(`📂 Module detected: ${path.relative(workspaceRoot, cwd)}`));
   } else {
     // Target host by default if in root
     const hostDir = path.join(workspaceRoot, `${projectName}-host`);
     if (fs.existsSync(hostDir)) {
       cwd = hostDir;
       pkgPath = path.join(cwd, 'package.json');
-      console.log(chalk.green(`📂 Host detectado: ${path.relative(workspaceRoot, cwd)}`));
+      console.log(chalk.green(`📂 Host detected: ${path.relative(workspaceRoot, cwd)}`));
     }
   }
 
@@ -69,7 +69,7 @@ module.exports = async (options) => {
         ...(isActive && { dev_url: `http://localhost:${port}/index.bundle` }) 
       };
       const res = await fetch(devApiUrl, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (res.ok) console.log(`📡 Registry Sync: Dev Override is ${isActive ? 'ON' : 'OFF'} para o modulo ${moduleId}`);
+      if (res.ok) console.log(`📡 Registry Sync: Dev Override is ${isActive ? 'ON' : 'OFF'} for module ${moduleId}`);
     } catch(e) { /* ignore */ }
   };
 
@@ -78,7 +78,7 @@ module.exports = async (options) => {
   const proc = spawn('npx', ['react-native', 'webpack-start', '--port', port], { cwd, stdio: 'inherit', shell: true });
 
   const shutdown = async () => {
-    console.log(`\n🛑 Parando ESAD Dev Server e revertendo o registro na CDN...`);
+    console.log(`\n🛑 Stopping ESAD Dev Server and reverting registry status...`);
     await setDevMode(false);
     proc.kill();
     process.exit(0);

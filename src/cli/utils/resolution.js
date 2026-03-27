@@ -45,7 +45,7 @@ function listAvailableModules(configObj) {
       return name;
     });
 
-  console.log(chalk.yellow('\nMódulos disponíveis:'));
+  console.log(chalk.yellow('\nAvailable modules:'));
   modules.forEach(m => console.log(chalk.blue(`- ${m}`)));
 }
 
