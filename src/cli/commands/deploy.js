@@ -1,39 +1,46 @@
 const fs = require('fs-extra');
 const path = require('path');
 const AdmZip = require('adm-zip');
+const chalk = require('chalk');
 const { getWorkspaceConfig } = require('../utils/config');
+const { resolveProjectDir, listAvailableModules } = require('../utils/resolution');
 
 module.exports = async (options) => {
   let cwd = process.cwd();
   let pkgPath = path.join(cwd, 'package.json');
   
-  // Try to find workspace config for root-level execution
+  // Enforce Workspace Root
   const configObj = getWorkspaceConfig();
-  if (configObj) {
-    const workspaceRoot = path.dirname(configObj.path);
-    const { projectName } = configObj.data;
-    
-    // If ID is provided, try to find that module/host folder
-    if (options.id) {
-       const targetDir = path.join(workspaceRoot, options.id);
-       if (fs.existsSync(targetDir)) {
-         cwd = targetDir;
-         pkgPath = path.join(cwd, 'package.json');
-         console.log(`📂 Auto-detected Project folder: ${path.relative(process.cwd(), targetDir)}`);
-       }
-    } else if (!fs.existsSync(pkgPath)) {
-       // If no ID and no package.json in current dir, assume we want to deploy the host from root
-       const hostDir = path.join(workspaceRoot, `${projectName}-host`);
-       if (fs.existsSync(hostDir)) {
-          cwd = hostDir;
-          pkgPath = path.join(cwd, 'package.json');
-          console.log(`📂 Auto-detected Host App folder: ${path.relative(process.cwd(), hostDir)}`);
-       }
+  if (!configObj) {
+    console.error(chalk.red(`❌ Erro: Comando deve ser executado na raiz do projeto (esad.config.json não encontrado).`));
+    process.exit(1);
+  }
+
+  const workspaceRoot = path.dirname(configObj.path);
+  const { projectName } = configObj.data;
+  
+  if (options.id) {
+    const targetDir = resolveProjectDir(options.id, configObj);
+    if (!targetDir) {
+      console.error(chalk.red(`\n❌ Erro: Não foi encontrado o módulo: ${options.id}`));
+      listAvailableModules(configObj);
+      process.exit(1);
+    }
+    cwd = targetDir;
+    pkgPath = path.join(cwd, 'package.json');
+    console.log(chalk.green(`📂 Módulo detectado para Deploy: ${path.relative(workspaceRoot, cwd)}`));
+  } else {
+    // Target host by default if in root
+    const hostDir = path.join(workspaceRoot, `${projectName}-host`);
+    if (fs.existsSync(hostDir)) {
+      cwd = hostDir;
+      pkgPath = path.join(cwd, 'package.json');
+      console.log(chalk.green(`📂 Host detectado para Deploy: ${path.relative(workspaceRoot, cwd)}`));
     }
   }
 
   if (!fs.existsSync(pkgPath)) {
-    console.error(`❌ Error: Call this command from inside a Project directory or the Workspace Root.`);
+    console.error(chalk.red(`❌ Erro: Arquivo package.json não encontrado em ${cwd}.`));
     process.exit(1);
   }
 

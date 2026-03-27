@@ -2,34 +2,41 @@ const { spawn } = require('cross-spawn');
 const { getWorkspaceConfig } = require('../utils/config');
 const fs = require('fs-extra');
 const path = require('path');
+const chalk = require('chalk');
 const { prepareNative } = require('../utils/scaffold');
+const { resolveProjectDir, listAvailableModules } = require('../utils/resolution');
 
 module.exports = async (options) => {
   let cwd = process.cwd();
   let pkgPath = path.join(cwd, 'package.json');
   
-  // Try to find workspace config for root-level execution
+  // Enforce Workspace Root
   const configObj = getWorkspaceConfig();
-  if (configObj) {
-    const workspaceRoot = path.dirname(configObj.path);
-    const { projectName } = configObj.data;
-    
-    if (options.id) {
-       // Target a specific module
-       const moduleDir = path.join(workspaceRoot, options.id);
-       if (fs.existsSync(moduleDir)) {
-         cwd = moduleDir;
-         pkgPath = path.join(cwd, 'package.json');
-         console.log(`📂 Auto-detected Module folder: ${path.relative(process.cwd(), moduleDir)}`);
-       }
-    } else {
-       // Target host by default if in root
-       const hostDir = path.join(workspaceRoot, `${projectName}-host`);
-       if (fs.existsSync(hostDir)) {
-          cwd = hostDir;
-          pkgPath = path.join(cwd, 'package.json');
-          console.log(`📂 Auto-detected Host App folder: ${path.relative(process.cwd(), hostDir)}`);
-       }
+  if (!configObj) {
+    console.error(chalk.red(`❌ Erro: Comando deve ser executado na raiz do projeto (esad.config.json não encontrado).`));
+    process.exit(1);
+  }
+
+  const workspaceRoot = path.dirname(configObj.path);
+  const { projectName } = configObj.data;
+  
+  if (options.id) {
+    const targetDir = resolveProjectDir(options.id, configObj);
+    if (!targetDir) {
+      console.error(chalk.red(`\n❌ Erro: Não foi encontrado o módulo: ${options.id}`));
+      listAvailableModules(configObj);
+      process.exit(1);
+    }
+    cwd = targetDir;
+    pkgPath = path.join(cwd, 'package.json');
+    console.log(chalk.green(`📂 Módulo detectado: ${path.relative(workspaceRoot, cwd)}`));
+  } else {
+    // Target host by default if in root
+    const hostDir = path.join(workspaceRoot, `${projectName}-host`);
+    if (fs.existsSync(hostDir)) {
+      cwd = hostDir;
+      pkgPath = path.join(cwd, 'package.json');
+      console.log(chalk.green(`📂 Host detectado: ${path.relative(workspaceRoot, cwd)}`));
     }
   }
 
