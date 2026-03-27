@@ -14,17 +14,17 @@ module.exports = async (moduleName) => {
 
   const { projectName } = configObj.data;
   const isPrefixed = moduleName.startsWith(`${projectName}-`);
-  const finalModuleName = isPrefixed ? moduleName : `${projectName}-\${moduleName}`;
-  
+  const finalModuleName = isPrefixed ? moduleName : `${projectName}-${moduleName}`;
+
   const workspaceDir = path.dirname(configObj.path);
   const targetDir = path.join(workspaceDir, finalModuleName);
 
   console.log(`\n📦 Creating federated mini-app: ${finalModuleName}...\n`);
-  
+
   try {
     // 1. Clone Template instead of react-native init
     await cloneTemplate(templatesConfig.module, targetDir);
-    
+
     // 2. Rename Project
     await renameProject(targetDir, finalModuleName);
 
