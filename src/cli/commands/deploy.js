@@ -74,8 +74,36 @@ module.exports = async (options) => {
   console.log(`🗜️  Zipped output to ${zipPath}`);
 
   console.log(`🚀 Uploading to CDN via multipart POST...`);
-  // Note: Here we would use form-data + fetch or axios to upload to Simple CDN
   
-  console.log(`✅ [SIMULATED] Successfully uploaded to ${deployUrl}`);
-  fs.unlinkSync(zipPath);
+  try {
+    const FormData = require('form-data'); // Standard in Node versions, or use native if available
+    const form = new FormData();
+    form.append('version', version);
+    form.append('bundle', fs.createReadStream(zipPath));
+
+    const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+    
+    // Simple CDN expects POST /api/admin/assets/:id/versions
+    const uploadUrl = deployUrl.includes('/versions') ? deployUrl : `${deployUrl}/versions`;
+
+    const response = await fetch(uploadUrl, {
+      method: 'POST',
+      body: form,
+      headers: form.getHeaders(),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log(chalk.green(`✅ Successfully uploaded ${moduleId} v${version} to CDN!`));
+      console.log(`📄 Active Version is now: ${result.active_version}`);
+    } else {
+      const errorText = await response.text();
+      console.error(chalk.red(`❌ Failed to upload: ${response.status} ${response.statusText}`));
+      console.error(errorText);
+    }
+  } catch (err) {
+    console.error(chalk.red(`❌ Error during upload: ${err.message}`));
+  } finally {
+    fs.unlinkSync(zipPath);
+  }
 };
