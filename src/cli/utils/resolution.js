@@ -49,7 +49,35 @@ function listAvailableModules(configObj) {
   modules.forEach(m => console.log(chalk.blue(`- ${m}`)));
 }
 
+/**
+ * Resolves a module's metadata (path and full ID) from a given shorthand or full ID.
+ * @param {string} id 
+ * @param {Object} configObj 
+ */
+function resolveModuleMetadata(id, configObj) {
+  if (!configObj) return null;
+  
+  const workspaceRoot = path.dirname(configObj.path);
+  const { projectName } = configObj.data;
+
+  // 1. Try exact match
+  let targetDir = path.join(workspaceRoot, id);
+  if (fs.existsSync(targetDir) && fs.statSync(targetDir).isDirectory()) {
+    return { path: targetDir, id: id };
+  }
+
+  // 2. Try prefixed match
+  const fullId = `${projectName}-${id}`;
+  targetDir = path.join(workspaceRoot, fullId);
+  if (fs.existsSync(targetDir) && fs.statSync(targetDir).isDirectory()) {
+    return { path: targetDir, id: fullId };
+  }
+
+  return null;
+}
+
 module.exports = {
   resolveProjectDir,
-  listAvailableModules
+  listAvailableModules,
+  resolveModuleMetadata
 };

@@ -3,7 +3,7 @@ const path = require('path');
 const AdmZip = require('adm-zip');
 const chalk = require('chalk');
 const { getWorkspaceConfig } = require('../utils/config');
-const { resolveProjectDir, listAvailableModules } = require('../utils/resolution');
+const { resolveModuleMetadata, listAvailableModules } = require('../utils/resolution');
 
 module.exports = async (options) => {
   let cwd = process.cwd();
@@ -19,23 +19,26 @@ module.exports = async (options) => {
   const workspaceRoot = path.dirname(configObj.path);
   const { projectName } = configObj.data;
   
-  if (options.id) {
-    const targetDir = resolveProjectDir(options.id, configObj);
-    if (!targetDir) {
-      console.error(chalk.red(`\n❌ Error: Module not found: ${options.id}`));
+  let moduleId = options.id;
+  
+  if (moduleId) {
+    const meta = resolveModuleMetadata(moduleId, configObj);
+    if (!meta) {
+      console.error(chalk.red(`\n❌ Error: Module not found: ${moduleId}`));
       listAvailableModules(configObj);
       process.exit(1);
     }
-    cwd = targetDir;
+    cwd = meta.path;
+    moduleId = meta.id; // Correct fully qualified ID
     pkgPath = path.join(cwd, 'package.json');
-    console.log(chalk.green(`📂 Module detected for Deploy: ${path.relative(workspaceRoot, cwd)}`));
+    console.log(`📂 Module detected for Deploy: ${path.basename(cwd)}`);
   } else {
     // Target host by default if in root
     const hostDir = path.join(workspaceRoot, `${projectName}-host`);
     if (fs.existsSync(hostDir)) {
       cwd = hostDir;
       pkgPath = path.join(cwd, 'package.json');
-      console.log(chalk.green(`📂 Host detected for Deploy: ${path.relative(workspaceRoot, cwd)}`));
+      console.log(chalk.green(`📂 Host detected for Deploy: ${path.basename(cwd)}`));
     }
   }
 
@@ -45,7 +48,7 @@ module.exports = async (options) => {
   }
 
   const pkg = fs.readJsonSync(pkgPath);
-  const moduleId = options.id || pkg.name;
+  moduleId = moduleId || pkg.name;
   const version = options.version || pkg.version;
   const entry = options.entry || 'index.bundle';
 
