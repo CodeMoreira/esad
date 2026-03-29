@@ -31,6 +31,11 @@ function withESAD(env, options) {
     mode: isDev ? 'development' : 'production',
     context: dirname,
     entry: options.entry || './index.js',
+    output: {
+      path: path.resolve(dirname, 'dist', platform),
+      filename: 'index.bundle',
+      clean: true,
+    },
     resolve: {
       ...Repack.getResolveOptions(),
       alias: {
