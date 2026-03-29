@@ -35,13 +35,17 @@ module.exports = async (options) => {
   
   console.log(`\n🏗️  Building production bundle for ${path.basename(cwd)} (${platform})...\n`);
   
-  try {
+    const bundleOutput = path.join(cwd, 'dist', platform, 'index.bundle');
+    fs.ensureDirSync(path.dirname(bundleOutput));
+
     // Run Re.Pack production build
     await runProcess('npx', [
       'react-native', 
       'webpack-bundle', 
       '--platform', platform, 
-      '--dev', 'false'
+      '--dev', 'false',
+      '--bundle-output', bundleOutput,
+      '--assets-dest', path.dirname(bundleOutput)
     ], cwd);
     
     console.log(chalk.green(`\n✅ Build complete! Assets generated in dist/ directory.`));
