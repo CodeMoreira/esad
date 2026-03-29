@@ -24,6 +24,7 @@ function withESAD(env, options) {
   const pkgPath = path.resolve(dirname, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const id = options.id.replace(/-/g, '_');
+  const clientPath = path.resolve(__dirname, '..', 'client', 'index.js');
 
   console.log(`[ESAD] Applying Mega-Zero-Config profile for ${options.type.toUpperCase()} (${platform}): ${id}`);
 
@@ -96,8 +97,11 @@ function withESAD(env, options) {
           'react/jsx-runtime': { singleton: true, eager: true, requiredVersion: pkg.dependencies.react },
           'react-native': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native'] },
           'react-native-safe-area-context': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native-safe-area-context'] },
-          '@codemoreira/esad/client': { singleton: true, eager: true },
-          '@codemoreira/esad': { singleton: true, eager: true },
+          '@codemoreira/esad/client': { 
+            singleton: true, 
+            eager: options.type === 'host', // Only eager in host to ensure it's available
+            import: clientPath 
+          },
           ...(options.shared || {})
         }
       })
