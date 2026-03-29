@@ -35,6 +35,7 @@ module.exports = async (options) => {
   
   console.log(`\n🏗️  Building production bundle for ${path.basename(cwd)} (${platform})...\n`);
   
+  try {
     const bundleOutput = path.join(cwd, 'dist', platform, 'index.bundle');
     fs.ensureDirSync(path.dirname(bundleOutput));
 
