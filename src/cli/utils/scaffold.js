@@ -45,6 +45,18 @@ async function renameProject(targetDir, newName) {
     await fs.writeJson(appJsonPath, appJson, { spaces: 2 });
     console.log(`✅ Updated app.json name/slug/package.`);
   }
+
+  // 3. Update Rspack Config if exists
+  const rspackPath = path.join(targetDir, 'rspack.config.mjs');
+  if (fs.existsSync(rspackPath)) {
+    let content = await fs.readFile(rspackPath, 'utf8');
+    const regex = /id:\s*['"][^'"]+['"]/;
+    if (regex.test(content)) {
+      content = content.replace(regex, `id: '${newName}'`);
+      await fs.writeFile(rspackPath, content);
+      console.log(`✅ Updated rspack.config.mjs id: ${newName}`);
+    }
+  }
 }
 
 /**
