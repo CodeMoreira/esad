@@ -10,6 +10,7 @@ const createCdnCommand = require('../src/cli/commands/createCdn');
 const deployCommand = require('../src/cli/commands/deploy');
 const devCommand = require('../src/cli/commands/dev');
 const hostCommand = require('../src/cli/commands/host');
+const buildCommand = require('../src/cli/commands/build');
 
 program
   .version(pkg.version)
@@ -48,6 +49,17 @@ program
   .description('Scaffold a React Native mini-app automatically configured for Module Federation via ESAD')
   .action(async (name) => {
      await createModuleCommand(name);
+     process.exit(0);
+  });
+
+// --- COMMAND: esad build ---
+program
+  .command('build')
+  .option('-i, --id <moduleId>', 'The Module ID to build')
+  .option('-p, --platform <platform>', 'Platform to build for (android, ios)', 'android')
+  .description('Builds a production bundle for the host or a specific module')
+  .action(async (options) => {
+     await buildCommand(options);
      process.exit(0);
   });
 
