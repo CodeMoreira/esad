@@ -36,7 +36,7 @@ module.exports = async (options) => {
   console.log(`\n🏗️  Building production bundle for ${path.basename(cwd)} (${platform})...\n`);
   
   try {
-    const bundleOutput = path.join(cwd, 'dist', platform, 'index.bundle');
+    const bundleOutput = path.join(cwd, 'build', platform, 'index.bundle');
     fs.ensureDirSync(path.dirname(bundleOutput));
 
     // Run Re.Pack production build
@@ -49,7 +49,7 @@ module.exports = async (options) => {
       '--assets-dest', path.dirname(bundleOutput)
     ], cwd);
     
-    console.log(chalk.green(`\n✅ Build complete! Assets generated in dist/ directory.`));
+    console.log(chalk.green(`\n✅ Build complete! Assets generated in build/ directory.`));
     console.log(`👉 You can now run: esad deploy ${options.id ? `--id ${options.id}` : ''}\n`);
   } catch (err) {
     console.error(chalk.red(`\n❌ Build failed: ${err.message}`));

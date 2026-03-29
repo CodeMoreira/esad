@@ -60,9 +60,9 @@ module.exports = async (options) => {
   const deployUrl = config.deployEndpoint.replace('{{moduleId}}', moduleId);
   console.log(`📡 Deployment Endpoint Resolved: ${deployUrl}`);
   
-  const distPath = path.join(cwd, 'dist');
+  const distPath = path.join(cwd, 'build');
   if (!fs.existsSync(distPath)) {
-    console.error(`❌ Error: dist/ directory not found in ${cwd}. Did you run the build command?`);
+    console.error(`❌ Error: build/ directory not found in ${cwd}. Did you run the build command?`);
     process.exit(1);
   }
 

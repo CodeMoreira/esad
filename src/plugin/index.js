@@ -32,7 +32,7 @@ function withESAD(env, options) {
     context: dirname,
     entry: options.entry || './index.js',
     output: {
-      path: path.resolve(dirname, 'dist', platform),
+      path: path.resolve(dirname, 'build', platform),
       filename: 'index.bundle',
       clean: true,
     },

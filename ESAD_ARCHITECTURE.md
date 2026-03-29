@@ -104,10 +104,11 @@ sequenceDiagram
 ```
 
 ### C. Deployment Flow
-1. **`esad deploy`**: Performs the production build for the specific module.
-2. **Bundle Generation**: Rspack generates the `.container.js.bundle` and chunks.
-3. **Registry Update**: CLI uploads artifacts to the CDN and updates the `mf-manifest.json` with the new version/hash.
-4. **Instant Update**: The Host App receives the new version on the next launch (OTA).
+1. **`esad build`**: Performs the production build for the specific module/platform.
+2. **Bundle Generation**: Rspack generates the `.container.js.bundle` and chunks into the `./build` directory.
+3. **`esad deploy`**: Packages the `./build` folder and performs the real multipart upload to the CDN.
+4. **Registry Update**: The CDN Registry updates its versioning and the `mf-manifest.json`.
+5. **Instant Update**: The Host App receives the new version on the next launch (OTA) or module resolution.
 
 ---
 

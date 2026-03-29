@@ -30,7 +30,14 @@ npx esad host dev  # Run the Host App
 npx esad dev --id module-name --port 9000  # Run a Module
 ```
 
-### 5. Deployment
+### 5. Build for Production
+Prepares the bundle and chunks for deployment, generating a standardized `./build` directory.
+```bash
+npx esad build --id module-name --platform android
+```
+
+### 6. Deployment
+Packages the `./build` folder and uploads it to your configured Registry/CDN via multipart POST.
 ```bash
 npx esad deploy --id module-name --version 1.0.0
 ```
