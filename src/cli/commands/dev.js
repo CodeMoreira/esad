@@ -3,7 +3,7 @@ const { getWorkspaceConfig, syncHostConfig } = require('../utils/config');
 const fs = require('fs-extra');
 const path = require('path');
 const chalk = require('chalk');
-const { resolveModuleMetadata, listAvailableModules } = require('../utils/resolution');
+const { resolveModuleMetadata, listAvailableModules, resolveProjectDir } = require('../utils/resolution');
 const { runProcess } = require('../utils/process');
 const AdmZip = require('adm-zip');
 
@@ -50,7 +50,7 @@ module.exports = async (options) => {
   }
 
   const pkg = fs.readJsonSync(pkgPath);
-  moduleId = moduleId || pkg.name;
+  let moduleId = options.id || pkg.name;
   const platform = options.platform || 'android';
 
   console.log(chalk.cyan(`\n☁️  Starting ESAD Dev-Push for ${moduleId} (${platform})\n`));
