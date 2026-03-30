@@ -27,8 +27,8 @@ program
 
 // --- COMMAND: esad create-cdn ---
 program
-  .command('create-cdn [cdn-name]')
-  .description('Scaffold the CDN / Registry backend')
+  .command('create-cdn')
+  .description('Scaffold the CDN backend (always named {{projectName}}-cdn)')
   .action(async (name) => {
      await createCdnCommand(name);
      process.exit(0);
@@ -37,7 +37,7 @@ program
 // --- COMMAND: esad host ---
 program
   .command('host <subcommand>')
-  .description('Manage the Host App (dev, android, ios)')
+  .description('Manage the Host App (Auto-Syncs config, runs android/ios)')
   .action(async (sub) => {
      await hostCommand(sub);
      process.exit(0);
@@ -78,9 +78,9 @@ program
 // --- COMMAND: esad dev ---
 program
   .command('dev')
-  .option('-i, --id <moduleId>', 'The Module ID to run in dev mode')
-  .option('-p, --port <port>', 'The port to run the dev server on', '8081')
-  .description('Starts the dev server and updates the external registry to bypass CDN')
+  .option('-i, --id <moduleId>', 'The Module ID to sync to Dev-Cloud')
+  .option('-p, --platform <platform>', 'Platform (android, ios)', 'android')
+  .description('Build and Push the module bundle to the Dev-Cloud for global previewing')
   .action(async (options) => {
      await devCommand(options);
      // Note: dev command has its own shutdown logic with SIGINT/SIGTERM

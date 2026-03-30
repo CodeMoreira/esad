@@ -23,11 +23,16 @@ npx esad create-module module-name
 npx esad create-cdn
 ```
 
-### 4. Development & Native Automation
-Starts the Rspack server and **automatically patches** native files (Gradle, Entry Points) if necessary.
+### 4. Development & Cloud-Sync
+Starts the Rspack server locally OR performs a **Dev-Cloud Sync** for remote preview.
 ```bash
-npx esad host dev  # Run the Host App
-npx esad dev --id module-name --port 9000  # Run a Module
+npx esad dev --id module-name  # Builds and pushes bundle to Dev Cloud
+```
+
+### 5. Host Automation
+Manages the Host App and automatically synchronizes project-wide configurations (Auto-Sync).
+```bash
+npx esad host android  # Run Host on Android
 ```
 
 ### 5. Build for Production
@@ -58,12 +63,21 @@ export default withESAD({
 ```
 
 ### ⚡ Global State SDK (`@codemoreira/esad/client`)
-Share state across the Host and all Remote Modules reactively:
+Share state across the Host and all Remote Modules reactively via a **Universal Singleton**:
 ```javascript
 import { useESADState } from '@codemoreira/esad/client';
 
 const [user, setUser] = useESADState('user');
 ```
+
+---
+
+## ⚙️ Configuration (`esad.config.json`)
+
+ESAD supports a "Zero-Config" but powerful orchestration file at the root:
+- `projectName`: Your SuperApp identifier.
+- `devModeFor`: Array of **shorthand** module names (e.g. `["recebimento"]`) to load from the Dev Cloud instead of Production.
+- **Auto-Sync**: CLI commands (`dev`, `build`, `deploy`) automatically propagate this config to the Host App.
 
 ---
 

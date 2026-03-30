@@ -2,7 +2,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const AdmZip = require('adm-zip');
 const chalk = require('chalk');
-const { getWorkspaceConfig } = require('../utils/config');
+const { getWorkspaceConfig, syncHostConfig } = require('../utils/config');
 const { resolveModuleMetadata, listAvailableModules } = require('../utils/resolution');
 
 module.exports = async (options) => {
@@ -18,6 +18,8 @@ module.exports = async (options) => {
 
   const workspaceRoot = path.dirname(configObj.path);
   const { projectName } = configObj.data;
+  
+  syncHostConfig(configObj);
   
   let moduleId = options.id;
   

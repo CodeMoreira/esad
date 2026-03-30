@@ -10,7 +10,8 @@ module.exports = async (cdnName) => {
     return;
   }
 
-  const finalCdnName = cdnName || `${configObj.data.projectName}-cdn`;
+  const { projectName } = configObj.data;
+  const finalCdnName = `${projectName}-cdn`;
   const cdnPath = path.join(process.cwd(), finalCdnName);
 
   if (fs.existsSync(cdnPath)) {

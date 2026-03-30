@@ -2,7 +2,7 @@ const { runProcess } = require('../utils/process');
 const path = require('path');
 const fs = require('fs-extra');
 const chalk = require('chalk');
-const { getWorkspaceConfig } = require('../utils/config');
+const { getWorkspaceConfig, syncHostConfig } = require('../utils/config');
 const { resolveProjectDir, listAvailableModules } = require('../utils/resolution');
 
 module.exports = async (options) => {
@@ -14,6 +14,8 @@ module.exports = async (options) => {
     console.error(chalk.red(`❌ Error: Call this command from the project root (esad.config.json not found).`));
     process.exit(1);
   }
+
+  syncHostConfig(configObj);
 
   const { projectName } = configObj.data;
   
