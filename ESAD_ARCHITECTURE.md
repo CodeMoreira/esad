@@ -17,7 +17,10 @@ graph TB
 
     subgraph "Infrastructure Layer (CDN & Registry)"
         REG["Module Registry<br/>(mf-manifest.json)"]
-        CDN["CDN Storage<br/>(*.bundle assets)"]
+        subgraph "CDN Storage"
+            CDN_Prod["Production Track<br/>(Immutable Versions)"]
+            CDN_Dev["Cloud-Dev Track<br/>(Atomic /dev Slot)"]
+        end
     end
 
     subgraph "SuperApp Host Project"
@@ -87,28 +90,34 @@ sequenceDiagram
     participant Dev as Developer
     participant CLI as ESAD CLI
     participant Mod as Module Project
-    participant Reg as Registry Server
+    participant CDN as CDN (Dev Track)
     participant Host as Running Host
 
-    Dev->>CLI: esad create-module <name>
-    CLI->>CLI: Clone Template & Link SDK
-    
-    Dev->>CLI: esad dev --port 9000
-    CLI->>Mod: Start Rspack (Port 9000)
-    CLI->>Reg: [Dev Override] Set Module 'X' URL to localhost:9000
-    
+    Dev->>CLI: esad dev --id module-x
+    CLI->>Mod: Run Build (index.bundle)
+    CLI->>CLI: Package into ZIP
+    CLI->>CDN: POST /api/admin/modules/x/dev
+    Note over CDN: Atomic Replace previous dev bundle
+
     Note over Host: Host reloads/fetches
-    Host->>Reg: Get Manifest
-    Reg-->>Host: Redirects Module 'X' to Dev URL
-    Host->>Mod: Fetch Bundle from 9000
+    Host->>CDN: Fetches /cdn/x/dev/index.bundle
+    Note over Host: Module 'X' is now updated globally
 ```
 
-### C. Deployment Flow
-1. **`esad build`**: Performs the production build for the specific module/platform.
-2. **Bundle Generation**: Rspack generates the `.container.js.bundle` and chunks into the `./build` directory.
-3. **`esad deploy`**: Packages the `./build` folder and performs the real multipart upload to the CDN.
-4. **Registry Update**: The CDN Registry updates its versioning and the `mf-manifest.json`.
-5. **Instant Update**: The Host App receives the new version on the next launch (OTA) or module resolution.
+### C. Deployment Flow (Production)
+1. **`esad build`**: Performs a full production build.
+2. **`esad deploy`**: Packages the `./build` folder and uploads to the **Production Track**.
+3. **Version Increment**: The CDN creates a new immutable version folder (e.g. `/cdn/x/1.0.1/`).
+4. **Registry Update**: The Registry updates the `active_version` for the module.
+
+---
+
+## ⚙️ 3. Configuration & Auto-Sync
+ESAD uses a **Centralized Registry Pattern** where the root `esad.config.json` drives the entire workspace.
+
+1. **`devModeFor`**: An array of shorthand module names (e.g., `["recebimento"]`).
+2. **Auto-Sync Utility**: Before executing `dev`, `build`, or `deploy`, the CLI propagates the root configuration into the Host App's directory.
+3. **Runtime Selection**: The Host App's fetch logic automatically switches between `active_version_url` and `dev_url` based on the sync'd `devModeFor` list.
 
 ---
 
@@ -142,8 +151,11 @@ graph LR
     end
 
     M_Hook <-->|Read/Write| H_State
-    H_State --- Bridge["React Context Bridge (Singleton)"]
+    H_State --- Bridge["Universal Global Singleton (globalThis)"]
 ```
+
+> [!IMPORTANT]
+> Since v1.3.18, the SDK uses `globalThis.__ESAD_EVENT_EMITTER__` to ensure state persists even if multiple SDK instances are bundled by different micro-frontend providers.
 
 > [!TIP]
 > This "Singleton Bridge" is the core reason why federated modules feel native and integrated, rather than isolated webviews or separate apps.
