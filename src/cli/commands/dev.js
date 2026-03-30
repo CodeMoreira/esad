@@ -25,20 +25,22 @@ module.exports = async (options) => {
   syncHostConfig(configObj);
   
   if (options.id) {
-    const targetDir = resolveProjectDir(options.id, configObj);
-    if (!targetDir) {
+    const metadata = resolveModuleMetadata(options.id, configObj);
+    if (!metadata) {
       console.error(chalk.red(`\n❌ Error: Module not found: ${options.id}`));
       listAvailableModules(configObj);
       process.exit(1);
     }
-    cwd = targetDir;
+    cwd = metadata.path;
+    moduleId = metadata.id;
     pkgPath = path.join(cwd, 'package.json');
-    console.log(chalk.green(`📂 Module detected: ${path.relative(workspaceRoot, cwd)}`));
+    console.log(chalk.green(`📂 Module detected: ${path.relative(workspaceRoot, cwd)} (ID: ${moduleId})`));
   } else {
     // Target host by default if in root
     const hostDir = path.join(workspaceRoot, `${projectName}-host`);
     if (fs.existsSync(hostDir)) {
       cwd = hostDir;
+      moduleId = pkg.name; // Fallback to package name if in host
       pkgPath = path.join(cwd, 'package.json');
       console.log(chalk.green(`📂 Host detected: ${path.relative(workspaceRoot, cwd)}`));
     }
@@ -50,7 +52,7 @@ module.exports = async (options) => {
   }
 
   const pkg = fs.readJsonSync(pkgPath);
-  let moduleId = options.id || pkg.name;
+  if (!moduleId) moduleId = pkg.name;
   const platform = options.platform || 'android';
 
   console.log(chalk.cyan(`\n☁️  Starting ESAD Dev-Push for ${moduleId} (${platform})\n`));
