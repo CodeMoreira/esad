@@ -5,34 +5,47 @@ import { useState, useEffect } from 'react';
  * This class runs as a true Singleton across the Host and all Federated Modules,
  * allowing instant variable sharing without tight coupling.
  */
-class ESADEventEmitter {
-  constructor() {
-    this.state = {};
-    this.listeners = {};
-  }
+// Unique key to store the global state in the environment (shared across sessions)
+const GLOBAL_STORE_KEY = '__ESAD_GLOBAL_STATE__';
 
+// Initialize the global store if it doesn't already exist.
+// This ensures that even if different chunks/modules have their own copy 
+// of this JS file, they all point to the same memory object in globalThis.
+if (!globalThis[GLOBAL_STORE_KEY]) {
+  globalThis[GLOBAL_STORE_KEY] = {
+    state: {},
+    listeners: {}
+  };
+}
+
+const GlobalStore = globalThis[GLOBAL_STORE_KEY];
+
+class ESADEventEmitter {
   set(key, value) {
-    this.state[key] = value;
-    if (this.listeners[key]) {
-      this.listeners[key].forEach(callback => callback(value));
+    GlobalStore.state[key] = value;
+    if (GlobalStore.listeners[key]) {
+      GlobalStore.listeners[key].forEach(callback => callback(value));
     }
   }
 
   get(key) {
-    return this.state[key];
+    return GlobalStore.state[key];
   }
 
   subscribe(key, callback) {
-    if (!this.listeners[key]) this.listeners[key] = [];
-    this.listeners[key].push(callback);
+    if (!GlobalStore.listeners[key]) {
+      GlobalStore.listeners[key] = [];
+    }
+    GlobalStore.listeners[key].push(callback);
+    
+    // Return unsubscribe function
     return () => {
-      this.listeners[key] = this.listeners[key].filter(cb => cb !== callback);
+      GlobalStore.listeners[key] = GlobalStore.listeners[key].filter(cb => cb !== callback);
     };
   }
 }
 
-// Because this package is marked as a ModuleFederation Singleton,
-// this instance will be shared identically across all chunks!
+// Global instance (acts as a proxy to the globalStore)
 const ESADState = new ESADEventEmitter();
 
 /**
