@@ -56,10 +56,10 @@ module.exports = async (options) => {
   console.log(chalk.cyan(`\n☁️  Starting ESAD Dev-Push for ${moduleId} (${platform})\n`));
   
   const config = configObj ? configObj.data : null;
-  const devUrlBase = config?.deployEndpoint || config?.devEndpoint;
+  const devUrlBase = config?.devModeEndpoint || config?.deployEndpoint?.replace('/versions', '');
   
   if (!devUrlBase) {
-    console.error(chalk.red(`❌ Error: 'deployEndpoint' not configured in esad.config.json.`));
+    console.error(chalk.red(`❌ Error: 'devModeEndpoint' or 'deployEndpoint' not configured in esad.config.json.`));
     process.exit(1);
   }
 
