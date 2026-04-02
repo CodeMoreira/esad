@@ -5,6 +5,7 @@ const path = require('path');
 const chalk = require('chalk');
 const { resolveModuleMetadata, listAvailableModules, resolveProjectDir } = require('../utils/resolution');
 const { runProcess } = require('../utils/process');
+const { prepareNative } = require('../utils/scaffold');
 const AdmZip = require('adm-zip');
 
 module.exports = async (options) => {
@@ -67,6 +68,9 @@ module.exports = async (options) => {
 
   const devUploadUrl = devUrlBase.replace('{{moduleId}}', moduleId) + '/dev';
   console.log(`📡 Dev-Cloud Endpoint: ${devUploadUrl}`);
+
+  // 0. Prepare Native
+  await prepareNative(cwd, platform);
 
   // 1. Build
   console.log(`\n🏗️  Step 1/3: Building bundle...`);

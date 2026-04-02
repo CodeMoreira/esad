@@ -4,6 +4,7 @@ const AdmZip = require('adm-zip');
 const chalk = require('chalk');
 const { getWorkspaceConfig, syncHostConfig } = require('../utils/config');
 const { resolveModuleMetadata, listAvailableModules } = require('../utils/resolution');
+const { prepareNative } = require('../utils/scaffold');
 
 module.exports = async (options) => {
   let cwd = process.cwd();
@@ -53,6 +54,9 @@ module.exports = async (options) => {
   moduleId = moduleId || pkg.name;
   const version = options.version || pkg.version;
   const entry = options.entry || 'index.bundle';
+
+  // Ensure Native Folders are present (useful for consistency)
+  await prepareNative(cwd, 'all');
 
   console.log(`\n☁️  Starting ESAD Deploy for ${moduleId} (v${version})\n`);
   

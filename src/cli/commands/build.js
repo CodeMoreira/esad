@@ -4,6 +4,7 @@ const fs = require('fs-extra');
 const chalk = require('chalk');
 const { getWorkspaceConfig, syncHostConfig } = require('../utils/config');
 const { resolveProjectDir, listAvailableModules } = require('../utils/resolution');
+const { prepareNative } = require('../utils/scaffold');
 
 module.exports = async (options) => {
   let cwd = process.cwd();
@@ -35,6 +36,9 @@ module.exports = async (options) => {
 
   const platform = options.platform || 'android';
   
+  // Prepare Native Folders
+  await prepareNative(cwd, platform);
+
   console.log(`\n🏗️  Building production bundle for ${path.basename(cwd)} (${platform})...\n`);
   
   try {
