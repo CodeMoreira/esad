@@ -39,15 +39,15 @@ function withESAD(env, options) {
     },
     resolve: {
       ...Repack.getResolveOptions(),
+      extensions: [
+        '.expo.ts', '.expo.tsx', '.expo.js', '.expo.jsx',
+        '.native.ts', '.native.tsx', '.native.js', '.native.jsx',
+        ...Repack.getResolveOptions().extensions,
+      ],
       alias: {
-        '@': path.resolve(dirname, '.'),
-        // Internal MFv2 & Re.Pack Aliases (Magic)
-        '@module-federation/runtime/helpers': path.resolve(dirname, 'node_modules/@module-federation/runtime/dist/helpers.js'),
-        '@module-federation/error-codes/browser': path.resolve(dirname, 'node_modules/@module-federation/error-codes/dist/browser.cjs'),
-        '@module-federation/sdk': path.resolve(dirname, 'node_modules/@module-federation/sdk'),
-        
+        '@': dirname,
+        'expo-router': path.resolve(dirname, 'node_modules/expo-router'),
         ...Repack.getResolveOptions().alias,
-        ...(options.alias || {}),
       }
     },
     module: {
@@ -55,17 +55,17 @@ function withESAD(env, options) {
         {
           oneOf: [
             {
-              test: /\.[cm]?[jt]sx?$/,
+              test: /\.[jt]sx?$/,
               include: [
-                /node_modules[\\/]react-native/,
-                /node_modules[\\/]@react-native/,
+                path.resolve(dirname, 'app'),
+                path.resolve(dirname, 'index.js'),
+                /[\\/]node_modules[\\/]expo-router[\\/]/
               ],
-              type: 'javascript/auto',
               use: {
-                loader: '@callstack/repack/babel-swc-loader',
+                loader: 'babel-loader',
                 options: {
-                  sourceMaps: true,
-                  parallel: true,
+                  presets: ['babel-preset-expo'],
+                  plugins: ['react-native-reanimated/plugin'],
                 },
               },
             },
@@ -97,10 +97,12 @@ function withESAD(env, options) {
           'react/jsx-runtime': { singleton: true, eager: true, requiredVersion: pkg.dependencies.react },
           'react-native': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native'] },
           'react-native-safe-area-context': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native-safe-area-context'] },
-          '@codemoreira/esad/client': { 
-            singleton: true, 
+          'expo-router': { singleton: true, eager: true, requiredVersion: pkg.dependencies['expo-router'] },
+          'react-native-screens': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native-screens'] },
+          '@codemoreira/esad/client': {
+            singleton: true,
             eager: options.type === 'host', // Only eager in host to ensure it's available
-            import: clientPath 
+            import: clientPath
           },
           ...(options.shared || {})
         }
