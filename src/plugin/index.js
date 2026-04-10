@@ -57,15 +57,14 @@ function withESAD(env, options) {
             {
               test: /\.[cm]?[jt]sx?$/,
               include: [
-                /node_modules[\\/]react-native/,
-                /node_modules[\\/]@react-native/,
+                /node_modules[\\/]react-native[\\/]/,
+                /node_modules[\\/]@react-native[\\/]/,
               ],
-              type: 'javascript/auto',
               use: {
-                loader: '@callstack/repack/babel-swc-loader',
+                loader: 'babel-loader',
                 options: {
-                  sourceMaps: true,
-                  parallel: true,
+                  presets: ['babel-preset-expo'],
+                  caller: { name: 'repack' },
                 },
               },
             },

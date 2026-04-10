@@ -120,12 +120,10 @@ module.exports = async (subcommand) => {
     }
 
     // 6. Launch Native App
-    if (choice === 'a') {
-      console.log(`🤖 Compiling and launching on Android...`);
-      await runProcess('npx', ['expo', 'run:android', '--no-bundler'], cwd);
+      await runProcess('npx', ['react-native', 'run-android', '--no-packager'], cwd);
     } else if (choice === 'i') {
       console.log(`🍎 Compiling and launching on iOS...`);
-      await runProcess('npx', ['expo', 'run:ios', '--no-bundler'], cwd);
+      await runProcess('npx', ['react-native', 'run-ios', '--no-packager'], cwd);
     } else if (choice === 'b') {
       if (portBusy) {
         console.log(`✨ Bundler is already active. You can launch manual native runs.`);
@@ -139,9 +137,9 @@ module.exports = async (subcommand) => {
     // Other subcommands (android, ios directly)
     try {
       if (subcommand === 'android') {
-        await runProcess('npx', ['expo', 'run:android', '--no-bundler'], cwd);
+        await runProcess('npx', ['react-native', 'run-android', '--no-packager'], cwd);
       } else if (subcommand === 'ios') {
-        await runProcess('npx', ['expo', 'run:ios', '--no-bundler'], cwd);
+        await runProcess('npx', ['react-native', 'run-ios', '--no-packager'], cwd);
       }
     } catch (err) {
       console.error(`❌ Error running host command: ${err.message}`);
