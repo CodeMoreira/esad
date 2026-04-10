@@ -1,6 +1,6 @@
 {
   "name": "@codemoreira/esad",
-  "version": "1.4.6-21",
+  "version": "1.4.6-22",
   "description": "Easy Super App Development - Zero-Config CLI and DevTools for React Native Module Federation",
   "main": "src/plugin/index.js",
   "types": "./src/plugin/index.d.ts",
@@ -31,7 +31,6 @@
   },
   "overrides": {
     "axios": "1.15.0",
-    "tar": "7.5.13",
     "@xmldom/xmldom": "0.9.9"
   },
   "dependencies": {
