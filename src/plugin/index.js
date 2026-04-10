@@ -60,6 +60,7 @@ function withESAD(env, options) {
                 /node_modules[\\/]react-native[\\/]/,
                 /node_modules[\\/]@react-native[\\/]/,
               ],
+              type: 'javascript/auto',
               use: {
                 loader: 'babel-loader',
                 options: {
