@@ -120,6 +120,8 @@ module.exports = async (subcommand) => {
     }
 
     // 6. Launch Native App
+    if (choice === 'a') {
+      console.log(`🤖 Compiling and launching on Android...`);
       await runProcess('npx', ['react-native', 'run-android', '--no-packager'], cwd);
     } else if (choice === 'i') {
       console.log(`🍎 Compiling and launching on iOS...`);
