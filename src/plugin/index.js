@@ -69,9 +69,7 @@ function withESAD(env, options) {
                 loader: 'babel-loader',
                 options: {
                   presets: ['babel-preset-expo'],
-                  plugins: [
-                    ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true, loose: true }]
-                  ],
+                  sourceType: 'unambiguous',
                   caller: { name: 'repack' },
                 },
               },
