@@ -53,9 +53,10 @@ function withESAD(env, options) {
     module: {
       rules: [
         {
-          test: /node_modules[\\/](react-native|@react-native)[\\/].*\.js$/,
+          test: /\.js$/,
+          include: /[\\/]node_modules[\\/]/,
+          exclude: /[\\/]node_modules[\\/](@module-federation|@rspack|federation)[\\/]/,
           type: 'javascript/auto',
-          resolve: { fullySpecified: false }
         },
         {
           oneOf: [
