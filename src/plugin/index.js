@@ -53,6 +53,11 @@ function withESAD(env, options) {
     module: {
       rules: [
         {
+          test: /node_modules[\\/](react-native|@react-native)[\\/].*\.js$/,
+          type: 'javascript/auto',
+          resolve: { fullySpecified: false }
+        },
+        {
           oneOf: [
             {
               test: /\.[cm]?[jt]sx?$/,
@@ -60,11 +65,13 @@ function withESAD(env, options) {
                 /node_modules[\\/]react-native[\\/]/,
                 /node_modules[\\/]@react-native[\\/]/,
               ],
-              type: 'javascript/auto',
               use: {
                 loader: 'babel-loader',
                 options: {
                   presets: ['babel-preset-expo'],
+                  plugins: [
+                    ['@babel/plugin-transform-modules-commonjs', { allowTopLevelThis: true, loose: true }]
+                  ],
                   caller: { name: 'repack' },
                 },
               },
