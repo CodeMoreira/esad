@@ -64,8 +64,12 @@ function withESAD(env, options) {
               use: {
                 loader: 'babel-loader',
                 options: {
-                  presets: ['babel-preset-expo'],
-                  plugins: ['@babel/plugin-transform-modules-commonjs'],
+                  presets: [
+                    [
+                      'babel-preset-expo',
+                      { native: { disableImportExportTransform: false } },
+                    ],
+                  ],
                   sourceType: 'unambiguous',
                   caller: { name: 'repack' },
                 },
