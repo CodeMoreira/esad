@@ -53,19 +53,15 @@ function withESAD(env, options) {
     module: {
       rules: [
         {
-          test: /\.js$/,
-          include: /[\\/]node_modules[\\/]/,
-          exclude: /[\\/]node_modules[\\/](@module-federation|@rspack|federation)[\\/]/,
-          type: 'javascript/auto',
-        },
-        {
           oneOf: [
             {
               test: /\.[cm]?[jt]sx?$/,
               include: [
-                /node_modules[\\/]react-native[\\/]/,
-                /node_modules[\\/]@react-native[\\/]/,
+                /node_modules[\\/](react-native|@react-native|expo|expo-modules-core|@expo|react-navigation|@react-navigation|@unimodules|unimodules|native-base)/,
+                config.context,
               ],
+              type: 'javascript/auto',
+              resolve: { fullySpecified: false },
               use: {
                 loader: 'babel-loader',
                 options: {
