@@ -58,10 +58,23 @@ function withESAD(env, options) {
               test: /\.[cm]?[jt]sx?$/,
               include: [
                 /node_modules[\\/](react-native|@react-native|expo|expo-modules-core|@expo|react-navigation|@react-navigation|@unimodules|unimodules|native-base)/,
-                dirname,
               ],
               type: 'javascript/auto',
               resolve: { fullySpecified: false },
+              use: {
+                loader: 'babel-loader',
+                options: {
+                  presets: ['babel-preset-expo'],
+                  plugins: ['@babel/plugin-transform-modules-commonjs'],
+                  sourceType: 'unambiguous',
+                  caller: { name: 'repack' },
+                },
+              },
+            },
+            {
+              test: /\.[cm]?[jt]sx?$/,
+              include: [dirname],
+              type: 'javascript/auto',
               use: {
                 loader: 'babel-loader',
                 options: {
