@@ -24,6 +24,8 @@ function withESAD(env, options) {
   const pkgPath = path.resolve(dirname, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const id = options.id.replace(/-/g, '_');
+  const sdkPkgPath = path.resolve(__dirname, '..', '..', 'package.json');
+  const sdkPkg = JSON.parse(fs.readFileSync(sdkPkgPath, 'utf8'));
   const clientPath = path.resolve(__dirname, '..', 'client', 'index.js');
 
   console.log(`[ESAD] Applying Mega-Zero-Config profile for ${options.type.toUpperCase()} (${platform}): ${id}`);
@@ -118,7 +120,9 @@ function withESAD(env, options) {
           'react-native-safe-area-context': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native-safe-area-context'] },
           '@codemoreira/esad/client': { 
             singleton: true, 
-            eager: options.type === 'host', // Only eager in host to ensure it's available
+            eager: options.type === 'host',
+            version: sdkPkg.version,
+            requiredVersion: sdkPkg.version,
             import: clientPath 
           },
           ...(options.shared || {})
