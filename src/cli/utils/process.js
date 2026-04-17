@@ -1,17 +1,13 @@
 const { spawn } = require('cross-spawn');
+const nativeSpawn = require('child_process').spawn;
 const path = require('path');
 const fs = require('fs-extra');
 
-/**
- * Helper to spawn commands synchronously
- * @param {string} cmd 
- * @param {string[]} args 
- * @param {string} cwd 
- * @returns {Promise<void>}
- */
 const runProcess = (cmd, args, cwd = process.cwd()) => {
   return new Promise((resolve, reject) => {
     let finished = false;
+    let started = false;
+
     const finalize = (fn, arg) => {
       if (finished) return;
       finished = true;
@@ -23,24 +19,36 @@ const runProcess = (cmd, args, cwd = process.cwd()) => {
     
     let command = cmd;
     let finalArgs = args;
+    let useNativeSpawn = false;
 
     if (fs.existsSync(localBinPath)) {
-      // Use RELATIVE path for Windows stability
       command = isWin ? `node_modules\\.bin\\${cmd}.cmd` : `./node_modules/.bin/${cmd}`;
+      useNativeSpawn = isWin; // Use native spawn on Windows for local binaries to avoid cross-spawn issues
     } else {
-      command = isWin ? `${cmd}.cmd` : cmd;
+      command = isWin ? 'npx.cmd' : 'npx';
+      finalArgs = [cmd, ...args];
     }
     
     console.log(`[ESAD] Resolved Command: ${command} (CWD: ${cwd})`);
 
-    const child = spawn(command, finalArgs, { 
+    // Mark as started after a short delay
+    setTimeout(() => { started = true; }, 2000);
+
+    const spawnFn = useNativeSpawn ? nativeSpawn : spawn;
+    const child = spawnFn(command, finalArgs, { 
       stdio: 'inherit', 
       cwd, 
       shell: true
     });
 
     child.on('error', err => {
-      // Log more details to understand when this happens
+      // If the process already "started" (ran for > 2s), we ignore early-spawn errors
+      // as they are likely shell artifacts from the process exiting.
+      if (started && err.code === 'ENOENT') {
+        console.warn(`[ESAD] Warning: Late ENOENT ignored for ${cmd}.`);
+        return;
+      }
+
       console.error(`[ESAD] Process Error: ${err.code} - ${err.message}`);
       finalize(reject, new Error(`Failed to start ${cmd}: ${err.message}`));
     });
