@@ -10,33 +10,52 @@ module.exports = async (projectName) => {
   
   fs.ensureDirSync(workspaceDir);
 
-  const configPath = path.join(workspaceDir, 'esad.config.json');
+  const configPath = path.join(workspaceDir, 'esad.config.js');
   if (!fs.existsSync(configPath)) {
-    const configTemplate = {
-      projectName: projectName,
-      registryUrl: "http://localhost:3000/modules",
-      deployEndpoint: "http://localhost:3000/api/admin/modules/{{moduleId}}/versions",
-      devModeEndpoint: "http://localhost:3000/api/admin/modules/{{moduleId}}"
-    };
-    fs.writeJsonSync(configPath, configTemplate, { spaces: 2 });
-    console.log(`✅ Generated dynamic configuration file: esad.config.json`);
+    const configTemplate = `/**
+ * ESAD: Super App Configuration
+ */
+export default {
+  projectName: '${projectName}',
+  
+  // 1. Development Overrides
+  // Managed automatically by 'esad dev'
+  devMode: {},
+
+  // 2. Programmable Deployment
+  // Receives the compiled bundle.
+  async deploy(bundle, { version, moduleId, options }) {
+    console.log('🚀 Starting custom upload for ' + moduleId + '...');
+    
+    // Example: Simple CDN V2 upload
+    // const response = await fetch('http://localhost:3000/api/admin/modules/' + moduleId + '/versions', {
+    //   method: 'POST',
+    //   body: bundle,
+    //   headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
+    // });
+    // return await response.json();
+
+    return { status: 'mock_success', moduleId, version };
+  }
+};
+`;
+    fs.writeFileSync(configPath, configTemplate);
+    console.log(`✅ Generated programmable configuration: esad.config.js`);
   }
 
   const gitignorePath = path.join(workspaceDir, '.gitignore');
   if (!fs.existsSync(gitignorePath)) {
     const hostName = `${projectName}-host`;
     const gitignoreContent = `# ESAD Workspace Git Configuration\n` +
-      `# Ignore everything by default\n` +
       `/*\n\n` +
-      `# Exceptions: Track only the Host and Configs\n` +
       `!/${hostName}/\n` +
-      `!/esad.config.json\n` +
+      `!/esad.config.js\n` +
       `!/.gitignore\n` +
-      `\n# Ignore node_modules\n` +
-      `node_modules/\n`;
+      `\nnode_modules/\n`;
     fs.writeFileSync(gitignorePath, gitignoreContent);
     console.log(`✅ Generated .gitignore`);
   }
+
 
   const hostName = `${projectName}-host`;
   const hostDir = path.join(workspaceDir, hostName);

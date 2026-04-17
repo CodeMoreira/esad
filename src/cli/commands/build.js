@@ -3,40 +3,41 @@ const path = require('path');
 const fs = require('fs-extra');
 const chalk = require('chalk');
 const { getWorkspaceConfig } = require('../utils/config');
-const { resolveProjectDir, listAvailableModules } = require('../utils/resolution');
+const { resolveProjectDir } = require('../utils/resolution');
+const { clearAllDevMode } = require('../utils/transformer');
 
 module.exports = async (options) => {
-  let cwd = process.cwd();
-  
-  // Enforce Workspace Root
   const configObj = getWorkspaceConfig();
   if (!configObj) {
-    console.error(chalk.red(`❌ Error: Call this command from the project root (esad.config.json not found).`));
+    console.error(chalk.red(`❌ Error: esad.config.js not found.`));
     process.exit(1);
   }
 
-  const { projectName } = configObj.data;
+  const config = await configObj.load();
+  const workspaceRoot = configObj.root;
+  const projectName = config.default?.projectName || config.projectName;
+  
+  let cwd = process.cwd();
   
   if (options.id) {
     const targetDir = resolveProjectDir(options.id, configObj);
     if (!targetDir) {
-      console.error(chalk.red(`\n❌ Error: Module not found: ${options.id}`));
-      listAvailableModules(configObj);
+      console.error(chalk.red(`❌ Error: Module not found: ${options.id}`));
       process.exit(1);
     }
     cwd = targetDir;
-  } else {
-    // Build host by default if in root
-    const hostDir = path.join(path.dirname(configObj.path), `${projectName}-host`);
-    if (fs.existsSync(hostDir)) cwd = hostDir;
   }
 
   const platform = options.platform || 'android';
   
-  console.log(`\n🏗️  Building production bundle for ${path.basename(cwd)} (${platform})...\n`);
+  console.log(`\n🏗️  Building production bundle for ${chalk.cyan(path.basename(cwd))} (${platform})...\n`);
   
+  // 1. CLEANUP CONFIG (Avoid shipping local dev URLs)
+  console.log(chalk.gray(`🧹 Cleaning up devMode mappings in esad.config.js...`));
+  clearAllDevMode(configObj.path);
+
   try {
-    const bundleOutput = path.join(cwd, 'build', platform, 'index.bundle');
+    const bundleOutput = path.join(cwd, 'build', 'index.bundle'); // Simplified path as per V2
     fs.ensureDirSync(path.dirname(bundleOutput));
 
     // Run Re.Pack production build
@@ -47,12 +48,13 @@ module.exports = async (options) => {
       '--dev', 'false',
       '--bundle-output', bundleOutput,
       '--assets-dest', path.dirname(bundleOutput)
-    ], cwd);
+    ], { cwd });
     
     console.log(chalk.green(`\n✅ Build complete! Assets generated in build/ directory.`));
-    console.log(`👉 You can now run: esad deploy ${options.id ? `--id ${options.id}` : ''}\n`);
+    console.log(`👉 Next step: 'esad deploy ${options.id || ''}'\n`);
   } catch (err) {
     console.error(chalk.red(`\n❌ Build failed: ${err.message}`));
     process.exit(1);
   }
 };
+

@@ -3,110 +3,78 @@ const path = require('path');
 const AdmZip = require('adm-zip');
 const chalk = require('chalk');
 const { getWorkspaceConfig } = require('../utils/config');
-const { resolveModuleMetadata, listAvailableModules } = require('../utils/resolution');
+const { resolveModuleMetadata } = require('../utils/resolution');
 
 module.exports = async (options) => {
-  let cwd = process.cwd();
-  let pkgPath = path.join(cwd, 'package.json');
-  
-  // Enforce Workspace Root
   const configObj = getWorkspaceConfig();
   if (!configObj) {
-    console.error(chalk.red(`❌ Error: Call this command from the project root (esad.config.json not found).`));
+    console.error(chalk.red(`❌ Error: esad.config.js not found in this or parent directories.`));
     process.exit(1);
   }
 
-  const workspaceRoot = path.dirname(configObj.path);
-  const { projectName } = configObj.data;
+  const config = await configObj.load();
+  const workspaceRoot = configObj.root;
+  const projectName = config.default?.projectName || config.projectName;
   
   let moduleId = options.id;
-  
+  let cwd = process.cwd();
+
+  // Resolve Context
   if (moduleId) {
     const meta = resolveModuleMetadata(moduleId, configObj);
     if (!meta) {
-      console.error(chalk.red(`\n❌ Error: Module not found: ${moduleId}`));
-      listAvailableModules(configObj);
+      console.error(chalk.red(`❌ Error: Module not found: ${moduleId}`));
       process.exit(1);
     }
     cwd = meta.path;
-    moduleId = meta.id; // Correct fully qualified ID
-    pkgPath = path.join(cwd, 'package.json');
-    console.log(`📂 Module detected for Deploy: ${path.basename(cwd)}`);
-  } else {
-    // Target host by default if in root
-    const hostDir = path.join(workspaceRoot, `${projectName}-host`);
-    if (fs.existsSync(hostDir)) {
-      cwd = hostDir;
-      pkgPath = path.join(cwd, 'package.json');
-      console.log(chalk.green(`📂 Host detected for Deploy: ${path.basename(cwd)}`));
-    }
   }
 
+  const pkgPath = path.join(cwd, 'package.json');
   if (!fs.existsSync(pkgPath)) {
     console.error(chalk.red(`❌ Error: package.json not found in ${cwd}.`));
     process.exit(1);
   }
 
   const pkg = fs.readJsonSync(pkgPath);
-  moduleId = moduleId || pkg.name;
+  const resolvedModuleId = moduleId || pkg.name;
   const version = options.version || pkg.version;
-  const entry = options.entry || 'index.bundle';
 
-  console.log(`\n☁️  Starting ESAD Deploy for ${moduleId} (v${version})\n`);
-  
-  const config = configObj ? configObj.data : null;
-  if (!config?.deployEndpoint) {
-    console.error(`❌ Error: 'deployEndpoint' not configured in esad.config.json.`);
-    process.exit(1);
-  }
-  
-  const deployUrl = config.deployEndpoint.replace('{{moduleId}}', moduleId);
-  console.log(`📡 Deployment Endpoint Resolved: ${deployUrl}`);
-  
+  console.log(`\n🚀 Starting ESAD Deploy for ${chalk.cyan(resolvedModuleId)} (v${version})\n`);
+
   const distPath = path.join(cwd, 'build');
   if (!fs.existsSync(distPath)) {
-    console.error(`❌ Error: build/ directory not found in ${cwd}. Did you run the build command?`);
+    console.error(chalk.red(`❌ Error: build/ directory not found. Please run 'esad build' first.`));
     process.exit(1);
   }
 
+  // ZIP BUNDLE
   const zip = new AdmZip();
   zip.addLocalFolder(distPath);
+  const buffer = zip.toBuffer();
   
-  const zipPath = path.join(cwd, `bundle-${moduleId}-${version}.zip`);
-  zip.writeZip(zipPath);
-  console.log(`🗜️  Zipped output to ${zipPath}`);
+  console.log(`🗜️  Generated bundle zip (${(buffer.length / 1024).toFixed(2)} KB)`);
 
-  console.log(`🚀 Uploading to CDN via multipart POST...`);
+  // RUN DEPLOY HOOK
+  const deployHook = config.default?.deploy || config.deploy;
   
+  if (typeof deployHook !== 'function') {
+    console.error(chalk.red(`❌ Error: 'deploy' function not found in esad.config.js.`));
+    process.exit(1);
+  }
+
   try {
-    const FormData = require('form-data'); // Standard in Node versions, or use native if available
-    const form = new FormData();
-    form.append('version', version);
-    form.append('bundle', fs.createReadStream(zipPath));
-
-    const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-    
-    // Simple CDN expects POST /api/admin/assets/:id/versions
-    const uploadUrl = deployUrl.includes('/versions') ? deployUrl : `${deployUrl}/versions`;
-
-    const response = await fetch(uploadUrl, {
-      method: 'POST',
-      body: form,
-      headers: form.getHeaders(),
+    console.log(`📡 Invoking custom 'deploy' hook...`);
+    const result = await deployHook(buffer, { 
+      version, 
+      moduleId: resolvedModuleId, 
+      options 
     });
-
-    if (response.ok) {
-      const result = await response.json();
-      console.log(chalk.green(`✅ Successfully uploaded ${moduleId} v${version} to CDN!`));
-      console.log(`📄 Active Version is now: ${result.active_version}`);
-    } else {
-      const errorText = await response.text();
-      console.error(chalk.red(`❌ Failed to upload: ${response.status} ${response.statusText}`));
-      console.error(errorText);
-    }
+    
+    console.log(chalk.green(`\n✅ Deployment successful!`));
+    if (result) console.log(JSON.stringify(result, null, 2));
   } catch (err) {
-    console.error(chalk.red(`❌ Error during upload: ${err.message}`));
-  } finally {
-    fs.unlinkSync(zipPath);
+    console.error(chalk.red(`\n❌ Deployment failed: ${err.message}`));
+    process.exit(1);
   }
 };
+

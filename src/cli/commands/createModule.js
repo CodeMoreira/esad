@@ -8,12 +8,15 @@ const templatesConfig = require('../templates/templates.json');
 module.exports = async (moduleName) => {
   const configObj = getWorkspaceConfig();
   if (!configObj) {
-    console.error(`❌ Error: Call this command from inside an ESAD workspace (esad.config.json not found).`);
+    console.error(`❌ Error: Call this command from inside an ESAD workspace (esad.config.js not found).`);
     return;
   }
 
-  const { projectName } = configObj.data;
+  const config = await configObj.load();
+  const projectName = config.default?.projectName || config.projectName;
+
   const isPrefixed = moduleName.startsWith(`${projectName}-`);
+
   const finalModuleName = isPrefixed ? moduleName : `${projectName}-${moduleName}`;
 
   const workspaceDir = path.dirname(configObj.path);
