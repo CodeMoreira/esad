@@ -86,7 +86,8 @@ module.exports = async (subcommand) => {
     if (shouldStartBundler && choice !== 'c') {
       console.log(`\n🛠️ Starting Rspack Bundler in a new window...`);
       if (process.platform === 'win32') {
-        spawn('cmd', ['/c', 'start', '/D', cwd, 'npx', 'react-native', 'webpack-start'], { 
+        const npxCmd = 'npx.cmd';
+        spawn('cmd', ['/c', 'start', '/D', cwd, npxCmd, 'react-native', 'webpack-start'], { 
           detached: true, 
           stdio: 'ignore',
           shell: true 
