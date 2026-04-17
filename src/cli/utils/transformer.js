@@ -29,6 +29,17 @@ const updateDevMode = (configPath, moduleId, url) => {
   fs.writeFileSync(configPath, content);
 };
 
+const removeDevMode = (configPath, moduleId) => {
+  if (!fs.existsSync(configPath)) return;
+  let content = fs.readFileSync(configPath, 'utf8');
+
+  // Remove specific module entry
+  const entryRegex = new RegExp(`\\s*['"]?${moduleId}['"]?:\\s*['"]([^'"]*)['"],?`, 'g');
+  content = content.replace(entryRegex, '');
+
+  fs.writeFileSync(configPath, content);
+};
+
 const clearAllDevMode = (configPath) => {
   if (!fs.existsSync(configPath)) return;
   let content = fs.readFileSync(configPath, 'utf8');
@@ -41,4 +52,3 @@ const clearAllDevMode = (configPath) => {
 };
 
 module.exports = { updateDevMode, removeDevMode, clearAllDevMode };
-
