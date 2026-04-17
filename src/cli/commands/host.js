@@ -139,6 +139,7 @@ module.exports = async (subcommand) => {
   } else {
     // Other subcommands (android, ios directly)
     try {
+      if (subcommand === 'android') {
         await runProcess('react-native', ['run-android', '--no-packager'], cwd);
       } else if (subcommand === 'ios') {
         await runProcess('react-native', ['run-ios', '--no-packager'], cwd);
