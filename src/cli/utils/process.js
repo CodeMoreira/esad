@@ -18,7 +18,6 @@ const runProcess = (cmd, args, cwd = process.cwd()) => {
       fn(arg);
     };
 
-    // Try to find a local binary in node_modules/.bin first
     const isWin = process.platform === 'win32';
     const localBinPath = path.join(cwd, 'node_modules', '.bin', isWin ? `${cmd}.cmd` : cmd);
     
@@ -26,22 +25,29 @@ const runProcess = (cmd, args, cwd = process.cwd()) => {
     let finalArgs = args;
 
     if (fs.existsSync(localBinPath)) {
-      command = localBinPath;
+      // Use RELATIVE path for Windows stability
+      command = isWin ? `node_modules\\.bin\\${cmd}.cmd` : `./node_modules/.bin/${cmd}`;
     } else {
-      // Fallback to npx
-      command = isWin ? 'npx.cmd' : 'npx';
-      finalArgs = [cmd, ...args];
+      command = isWin ? `${cmd}.cmd` : cmd;
     }
+    
+    console.log(`[ESAD] Resolved Command: ${command} (CWD: ${cwd})`);
 
-    const child = spawn(command, finalArgs, { stdio: 'inherit', cwd, shell: true });
+    const child = spawn(command, finalArgs, { 
+      stdio: 'inherit', 
+      cwd, 
+      shell: true
+    });
 
     child.on('error', err => {
-      finalize(reject, new Error(`Failed to spawn command ${command}: ${err.message}`));
+      // Log more details to understand when this happens
+      console.error(`[ESAD] Process Error: ${err.code} - ${err.message}`);
+      finalize(reject, new Error(`Failed to start ${cmd}: ${err.message}`));
     });
 
     child.on('close', code => {
       if (code !== 0) {
-        finalize(reject, new Error(`Command ${command} ${finalArgs.join(' ')} failed with exit code ${code}`));
+        finalize(reject, new Error(`Process ${cmd} exited with code ${code}`));
       } else {
         finalize(resolve);
       }
