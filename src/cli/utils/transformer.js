@@ -51,4 +51,32 @@ const clearAllDevMode = (configPath) => {
   fs.writeFileSync(configPath, content);
 };
 
-module.exports = { updateDevMode, removeDevMode, clearAllDevMode };
+const syncContextDownwards = (configObj) => {
+  if (!fs.existsSync(configObj.path)) return;
+  const configDir = path.dirname(configObj.path);
+
+  // Clear cache to read fresh state
+  delete require.cache[require.resolve(configObj.path)];
+  let configContent = require(configObj.path);
+  if (configContent.default) configContent = configContent.default;
+
+  const exportData = {
+    projectName: configContent.projectName || 'esad-workspace',
+    devMode: configContent.devMode || {}
+  };
+
+  try {
+    const children = fs.readdirSync(configDir, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => path.join(configDir, dirent.name))
+      .filter(dir => fs.existsSync(path.join(dir, 'package.json')));
+
+    for (const childDir of children) {
+      fs.writeJsonSync(path.join(childDir, '.esad.context.json'), exportData, { spaces: 2 });
+    }
+  } catch (err) {
+    console.error('Failed to sync context downwards:', err.message);
+  }
+};
+
+module.exports = { updateDevMode, removeDevMode, clearAllDevMode, syncContextDownwards };

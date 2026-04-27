@@ -55,6 +55,10 @@ export default {
   try {
     await cloneTemplate(templatesConfig.host, hostDir);
     await renameProject(hostDir, hostName);
+    
+    // Inject local context mock immediately to avoid crashes on fresh boot
+    fs.writeJsonSync(path.join(hostDir, '.esad.context.json'), { projectName, devMode: {} }, { spaces: 2 });
+    
     console.log(`\n📦 Installing dependencies into host...`);
     await runProcess('npm', ['install'], { cwd: hostDir });
     console.log(`\n🎉 ESAD Workspace Initialized!`);
@@ -85,6 +89,10 @@ const createModule = async (moduleName) => {
   try {
     await cloneTemplate(templatesConfig.module, targetDir);
     await renameProject(targetDir, finalModuleName);
+    
+    // Inject local context mock immediately
+    fs.writeJsonSync(path.join(targetDir, '.esad.context.json'), { projectName, devMode: {} }, { spaces: 2 });
+    
     console.log(`\n📦 Installing dependencies...`);
     await runProcess('npm', ['install'], { cwd: targetDir });
     console.log(`\n🎉 Module ${finalModuleName} is ready!`);

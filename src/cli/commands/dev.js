@@ -45,13 +45,14 @@ module.exports = async (options) => {
      return;
   }
 
-  const { updateDevMode, removeDevMode } = require('../utils/transformer');
+  const { updateDevMode, removeDevMode, syncContextDownwards } = require('../utils/transformer');
   
   console.log(`\n⚡ Starting ESAD Dev Server for ${chalk.cyan(moduleId)} on port ${port}...\n`);
   
   // Automate devMode update in esad.config.js
   const localBundleUrl = `http://localhost:${port}/index.bundle`;
   updateDevMode(configObj.path, moduleId, localBundleUrl);
+  syncContextDownwards(configObj);
   console.log(chalk.gray(`📡 Mode: Module Dev. Host configured to load ${moduleId} from ${localBundleUrl}`));
 
   const proc = runProcess('npx', ['react-native', 'webpack-start', '--port', port], { cwd });
@@ -59,6 +60,7 @@ module.exports = async (options) => {
   const shutdown = async () => {
     console.log(`\n🛑 Stopping ESAD Dev Server and reverting config...`);
     removeDevMode(configObj.path, moduleId);
+    syncContextDownwards(configObj);
     if (proc.kill) proc.kill();
     process.exit(0);
   };

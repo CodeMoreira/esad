@@ -32,10 +32,10 @@ module.exports = async () => {
   const envPath = path.join(process.cwd(), '.env');
   if (fs.existsSync(envPath)) {
     const envContent = fs.readFileSync(envPath, 'utf8');
-    if (envContent.includes('registryUrl')) {
-      console.log(`${chalk.green('✔')} registryUrl found in .env`);
+    if (envContent.includes('EXPO_PUBLIC_REGISTRY_URL')) {
+      console.log(`${chalk.green('✔')} EXPO_PUBLIC_REGISTRY_URL found in .env`);
     } else {
-      console.warn(`${chalk.yellow('⚠')} Warning: registryUrl not found in .env (Host might fail to resolve modules).`);
+      console.warn(`${chalk.yellow('⚠')} Warning: EXPO_PUBLIC_REGISTRY_URL not found in .env (Host might fail to resolve modules).`);
       warnings++;
     }
   } else {

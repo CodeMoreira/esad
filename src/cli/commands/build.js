@@ -4,7 +4,7 @@ const fs = require('fs-extra');
 const chalk = require('chalk');
 const { getWorkspaceConfig } = require('../utils/config');
 const { resolveProjectDir } = require('../utils/resolution');
-const { clearAllDevMode } = require('../utils/transformer');
+const { clearAllDevMode, syncContextDownwards } = require('../utils/transformer');
 
 module.exports = async (options) => {
   const configObj = getWorkspaceConfig();
@@ -35,6 +35,7 @@ module.exports = async (options) => {
   // 1. CLEANUP CONFIG (Avoid shipping local dev URLs)
   console.log(chalk.gray(`🧹 Cleaning up devMode mappings in esad.config.js...`));
   clearAllDevMode(configObj.path);
+  syncContextDownwards(configObj);
 
   try {
     const bundleOutput = path.join(cwd, 'build', 'index.bundle'); // Simplified path as per V2
