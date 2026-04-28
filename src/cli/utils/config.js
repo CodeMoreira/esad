@@ -20,15 +20,14 @@ const getWorkspaceConfig = () => {
 
   try {
     const jiti = createJiti(__filename);
-    const configModule = jiti(configPath);
-    // jiti.import returns a promise for async imports if needed, but for esad.config.js 
-    // we expect a sync structure or we resolve it.
-    // However, jiti v2 import is async.
-    
+    let configData = jiti(configPath);
+    if (configData.default) configData = configData.default;
+
     return { 
       path: configPath, 
       root: path.dirname(configPath),
-      load: () => configModule 
+      data: configData,
+      load: () => configData 
     };
   } catch (err) {
     console.error(`❌ Failed to load esad.config.js: ${err.message}`);
