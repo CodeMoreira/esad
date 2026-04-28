@@ -29,7 +29,7 @@ program
   .command('dev [id]') // [id] as alias to -i for better UX
   .option('-i, --id <moduleId>', 'The Module ID to run in dev mode')
   .option('-p, --port <port>', 'The port to run the dev server on', '8081')
-  .description('Starts the dev server and updates the local mapping')
+  .description('Starts the development environment for a module or the host application')
   .action(async (id, options) => {
     const opts = { ...options, id: id || options.id };
     await require('../src/cli/commands/dev')(opts);
