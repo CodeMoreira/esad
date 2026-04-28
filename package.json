@@ -1,6 +1,6 @@
 {
   "name": "@codemoreira/esad",
-  "version": "2.0.1-0",
+  "version": "2.0.1-1",
   "description": "Easy Super App Development - Zero-Config CLI and DevTools for React Native Module Federation",
   "main": "src/plugin/index.js",
   "types": "./src/plugin/index.d.ts",
@@ -50,6 +50,7 @@
     "cross-spawn": "^7.0.3",
     "form-data": "^4.0.0",
     "fs-extra": "^11.2.0",
+    "jiti": "^2.6.1",
     "node-fetch": "^2.7.0",
     "process": "^0.11.10"
   },

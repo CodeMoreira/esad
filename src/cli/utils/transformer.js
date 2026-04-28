@@ -51,13 +51,14 @@ const clearAllDevMode = (configPath) => {
   fs.writeFileSync(configPath, content);
 };
 
+const { createJiti } = require('jiti');
+
 const syncContextDownwards = (configObj) => {
   if (!fs.existsSync(configObj.path)) return;
   const configDir = path.dirname(configObj.path);
 
-  // Clear cache to read fresh state
-  delete require.cache[require.resolve(configObj.path)];
-  let configContent = require(configObj.path);
+  const jiti = createJiti(__filename);
+  let configContent = jiti(configObj.path);
   if (configContent.default) configContent = configContent.default;
 
   const exportData = {
