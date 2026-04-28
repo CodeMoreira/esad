@@ -38,7 +38,7 @@ module.exports = async (options) => {
   syncContextDownwards(configObj);
 
   try {
-    const bundleOutput = path.join(cwd, 'build', 'index.bundle'); // Simplified path as per V2
+    const bundleOutput = path.join(cwd, 'build', platform, 'index.bundle'); 
     fs.ensureDirSync(path.dirname(bundleOutput));
 
     // Run Re.Pack production build
