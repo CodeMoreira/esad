@@ -3,7 +3,8 @@ const nativeSpawn = require('child_process').spawn;
 const path = require('path');
 const fs = require('fs-extra');
 
-const runProcess = (cmd, args, cwd = process.cwd()) => {
+const runProcess = (cmd, args, options = process.cwd()) => {
+    const cwd = typeof options === 'string' ? options : (options.cwd || process.cwd());
     let childRef;
     const promise = new Promise((resolve, reject) => {
       let finished = false;
