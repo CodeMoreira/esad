@@ -87,19 +87,19 @@ sequenceDiagram
     participant Dev as Developer
     participant CLI as ESAD CLI
     participant Mod as Module Project
-    participant Reg as Registry Server
+    participant Config as esad.config.js
     participant Host as Running Host
 
-    Dev->>CLI: esad create-module <name>
-    CLI->>CLI: Clone Template & Link SDK
+    Dev->>CLI: esad create <name> --type module
+    CLI->>CLI: Clone Template & Inject Context
     
-    Dev->>CLI: esad dev --port 9000
+    Dev->>CLI: esad dev [moduleId] --port 9000
     CLI->>Mod: Start Rspack (Port 9000)
-    CLI->>Reg: [Dev Override] Set Module 'X' URL to localhost:9000
+    CLI->>Config: [DevMode] Set Module 'X' URL to localhost:9000
     
     Note over Host: Host reloads/fetches
-    Host->>Reg: Get Manifest
-    Reg-->>Host: Redirects Module 'X' to Dev URL
+    Host->>Config: Read DevMode Mappings
+    Config-->>Host: Redirects Module 'X' to localhost:9000
     Host->>Mod: Fetch Bundle from 9000
 ```
 
