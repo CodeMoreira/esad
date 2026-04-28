@@ -6,68 +6,6 @@ const { cloneTemplate, renameProject } = require('../utils/scaffold');
 const { getWorkspaceConfig } = require('../utils/config');
 const templatesConfig = require('../templates/templates.json');
 
-const initHost = async (projectName) => {
-  const workspaceDir = path.join(process.cwd(), projectName);
-  console.log(`\n🚀 Initializing ESAD Workspace: ${projectName}...\n`);
-  
-  fs.ensureDirSync(workspaceDir);
-
-  const configPath = path.join(workspaceDir, 'esad.config.js');
-  if (!fs.existsSync(configPath)) {
-    const configTemplate = `/**
- * ESAD: Super App Configuration
- */
-export default {
-  projectName: '${projectName}',
-  
-  // 1. Development Overrides
-  // Managed automatically by 'esad dev'
-  devMode: {},
-
-  // 2. Programmable Deployment
-  // Receives the compiled bundle.
-  async deploy(bundle, { version, moduleId, options }) {
-    console.log('🚀 Starting custom upload for ' + moduleId + '...');
-    // return { status: 'mock_success', moduleId, version };
-  }
-};
-`;
-    fs.writeFileSync(configPath, configTemplate);
-    console.log(`✅ Generated programmable configuration: esad.config.js`);
-  }
-
-  const gitignorePath = path.join(workspaceDir, '.gitignore');
-  if (!fs.existsSync(gitignorePath)) {
-    const hostName = `${projectName}-host`;
-    const gitignoreContent = `# ESAD Workspace Git Configuration\n` +
-      `/*\n\n` +
-      `!/${hostName}/\n` +
-      `!/esad.config.js\n` +
-      `!/.gitignore\n` +
-      `\nnode_modules/\n`;
-    fs.writeFileSync(gitignorePath, gitignoreContent);
-    console.log(`✅ Generated .gitignore`);
-  }
-
-  const hostName = `${projectName}-host`;
-  const hostDir = path.join(workspaceDir, hostName);
-  
-  try {
-    await cloneTemplate(templatesConfig.host, hostDir);
-    await renameProject(hostDir, hostName);
-    
-    // Inject local context mock immediately to avoid crashes on fresh boot
-    fs.writeJsonSync(path.join(hostDir, '.esad.context.json'), { projectName, devMode: {} }, { spaces: 2 });
-    
-    console.log(`\n📦 Installing dependencies into host...`);
-    await runProcess('npm', ['install'], { cwd: hostDir });
-    console.log(`\n🎉 ESAD Workspace Initialized!`);
-    console.log(`-> cd ${projectName}/${hostName}\n-> esad host dev (to start Host)`);
-  } catch (err) {
-    console.error(`❌ Failed to init Host:`, err.message);
-  }
-};
-
 const createModule = async (moduleName) => {
   const configObj = getWorkspaceConfig();
   if (!configObj) {
@@ -138,11 +76,9 @@ module.exports = async (name, options) => {
   const type = options.type;
 
   if (type === 'host') {
-    if (!name) {
-      console.error(chalk.red('❌ Error: Project name is required for host creation.'));
-      process.exit(1);
-    }
-    return await initHost(name);
+    console.error(chalk.red('❌ Error: The "host" type is no longer supported in create.'));
+    console.error(chalk.yellow('👉 Use "esad init <project-name>" instead to create a new workspace.'));
+    process.exit(1);
   }
 
   if (type === 'module') {
@@ -157,5 +93,5 @@ module.exports = async (name, options) => {
     return await createCdn(name);
   }
 
-  console.error(chalk.red(`❌ Unknown type: ${type}. Valid types are: host, module, cdn.`));
+  console.error(chalk.red(`❌ Unknown type: ${type}. Valid types are: module, cdn.`));
 };

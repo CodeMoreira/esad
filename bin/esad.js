@@ -7,14 +7,21 @@ program
   .version(pkg.version)
   .description('esad - Easy Super App Development Toolkit (V2)');
 
-// --- COMMAND: esad create [name] --type [host|module|cdn] ---
+// --- COMMAND: esad init [name] ---
+program
+  .command('init [name]')
+  .description('Creates the base of an ESAD project (Workspace and Host App)')
+  .action(async (name) => {
+    await require('../src/cli/commands/init')(name);
+  });
+
+// --- COMMAND: esad create [name] --type [module|cdn] ---
 program
   .command('create [name]')
-  .option('-t, --type <type>', 'Type of project: host, module, cdn', 'module')
-  .description('Unified scaffolding for host apps, modules, and cdn registries')
+  .option('-t, --type <type>', 'Type of resource: module, cdn', 'module')
+  .description('Expands an existing workspace by scaffolding modules or a local cdn')
   .action(async (name, options) => {
     await require('../src/cli/commands/create')(name, options);
-    process.exit(0);
   });
 
 // --- COMMAND: esad dev [moduleId] ---
@@ -37,7 +44,6 @@ program
   .action(async (id, options) => {
     const opts = { ...options, id: id || options.id };
     await require('../src/cli/commands/build')(opts);
-    process.exit(0);
   });
 
 // --- COMMAND: esad deploy [id] ---
@@ -49,7 +55,6 @@ program
   .action(async (id, options) => {
     const opts = { ...options, id: id || options.id };
     await require('../src/cli/commands/deploy')(opts);
-    process.exit(0);
   });
 
 // --- COMMAND: esad host <sub> ---
@@ -58,7 +63,6 @@ program
   .description('Manage host application (android, ios, login)')
   .action(async (sub) => {
     await require('../src/cli/commands/host')(sub);
-    process.exit(0);
   });
 
 // --- COMMAND: esad doctor ---
@@ -67,7 +71,6 @@ program
   .description('Check environment for common issues')
   .action(async () => {
     await require('../src/cli/commands/doctor')();
-    process.exit(0);
   });
 
 // --- COMMAND: esad link [id] ---
@@ -76,7 +79,6 @@ program
   .description('Optimize development via local filesystem linking')
   .action(async (id) => {
     await require('../src/cli/commands/link')(id);
-    process.exit(0);
   });
 
 program.parse(process.argv);
