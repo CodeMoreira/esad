@@ -63,13 +63,23 @@ export default {
     await renameProject(hostDir, hostName);
     
     // Inject local context mock immediately to avoid crashes on fresh boot
-    fs.writeJsonSync(path.join(hostDir, '.esad.context.json'), { projectName, devMode: {} }, { spaces: 2 });
+    const context = { projectName, devMode: {} };
+    fs.writeJsonSync(path.join(hostDir, '.esad.context.json'), context, { spaces: 2 });
     
-    console.log(`\n📦 Installing dependencies into host...`);
+    // Stabilize filesystem before heavy operations
+    await new Promise(res => setTimeout(res, 500));
+
+    console.log(`\n📦 Installing dependencies into host (this may take a minute)...`);
     await runProcess('npm', ['install'], { cwd: hostDir });
-    console.log(`\n🎉 ESAD Workspace Initialized!`);
-    console.log(`-> cd ${projectName}/${hostName}\n-> esad host dev (to start Host)`);
+    
+    console.log(chalk.green(`\n🎉 ESAD Workspace Initialized successfully!`));
+    console.log(chalk.cyan(`\n👉 Next steps:`));
+    console.log(`   1. cd ${projectName}/${hostName}`);
+    console.log(`   2. esad host dev (to start Host)`);
+    console.log(`   3. esad dev (in a module folder to federate)\n`);
   } catch (err) {
-    console.error(`❌ Failed to init Host:`, err.message);
+    console.error(chalk.red(`\n❌ Failed to initialize workspace:`));
+    console.error(chalk.yellow(`   ${err.message}`));
+    console.log(chalk.dim(`\n   Check npm logs if it was an installation error.`));
   }
 };
