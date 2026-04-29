@@ -64,7 +64,7 @@ function withESAD(env, options) {
               type: 'javascript/auto',
               resolve: { fullySpecified: false },
               use: {
-                loader: 'babel-loader',
+                loader: '@callstack/repack/babel-swc-loader',
                 options: {
                   babelrc: false,
                   configFile: false,
@@ -82,11 +82,10 @@ function withESAD(env, options) {
               exclude: [/node_modules/],
               type: 'javascript/auto',
               use: {
-                loader: 'babel-loader',
+                loader: '@callstack/repack/babel-swc-loader',
                 options: {
-                  babelrc: false,
-                  configFile: false,
-                  presets: ['@react-native/babel-preset'],
+                  // Allow project-level babel.config.js to be applied
+                  babelrc: true,
                   sourceType: 'unambiguous',
                   caller: { name: 'repack' },
                 },

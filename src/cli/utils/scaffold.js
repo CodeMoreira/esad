@@ -85,6 +85,16 @@ async function prepareNative(cwd, platform = 'android') {
       await fs.writeFile(buildGradlePath, content);
       console.log(`✅ Patched android/app/build.gradle for Re.Pack and AndroidX versions.`);
     }
+
+    const gradlePropsPath = path.join(androidDir, 'gradle.properties');
+    if (fs.existsSync(gradlePropsPath)) {
+      let props = await fs.readFile(gradlePropsPath, 'utf8');
+      if (!props.includes('newArchEnabled=true')) {
+        props += '\nnewArchEnabled=true\n';
+        await fs.writeFile(gradlePropsPath, props);
+        console.log(`✅ Enabled New Architecture in android/gradle.properties.`);
+      }
+    }
   }
 
   // Create react-native.config.js if missing
