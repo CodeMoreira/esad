@@ -24,12 +24,13 @@ program
     await require('../src/cli/commands/create')(name, options);
   });
 
-// --- COMMAND: esad dev [moduleId] ---
+// --- COMMAND: esad dev [id] ---
 program
-  .command('dev [id]') // [id] as alias to -i for better UX
+  .command('dev [id]')
   .option('-i, --id <moduleId>', 'The Module ID to run in dev mode')
   .option('-p, --port <port>', 'The port to run the dev server on', '8081')
-  .description('Starts the development environment for a module or the host application')
+  .option('--platform <platform>', 'Platform for host: android, ios, bundler')
+  .description('Starts the development environment. Run without [id] for Host App or with [id] for a specific Module.')
   .action(async (id, options) => {
     const opts = { ...options, id: id || options.id };
     await require('../src/cli/commands/dev')(opts);
@@ -40,7 +41,7 @@ program
   .command('build [id]')
   .option('-i, --id <moduleId>', 'The Module ID to build')
   .option('-p, --platform <platform>', 'Platform: android, ios', 'android')
-  .description('Builds a production bundle')
+  .description('Builds a production bundle for a module or the host application')
   .action(async (id, options) => {
     const opts = { ...options, id: id || options.id };
     await require('../src/cli/commands/build')(opts);
@@ -55,14 +56,6 @@ program
   .action(async (id, options) => {
     const opts = { ...options, id: id || options.id };
     await require('../src/cli/commands/deploy')(opts);
-  });
-
-// --- COMMAND: esad host <sub> ---
-program
-  .command('host <subcommand>')
-  .description('Manage host application (android, ios, login)')
-  .action(async (sub) => {
-    await require('../src/cli/commands/host')(sub);
   });
 
 // --- COMMAND: esad doctor ---
