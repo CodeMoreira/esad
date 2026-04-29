@@ -75,8 +75,15 @@ async function prepareNative(cwd, platform = 'android') {
     if (!content.includes('project.ext.react')) {
       const patch = `\nproject.ext.react = [\n    bundleCommand: "repack-bundle",\n    bundleConfig: "rspack.config.mjs"\n]\n\n`;
       content = content.replace(/react \{/, `${patch}react {`);
+      
+      // Force androidx.core version to avoid SDK 36 requirement conflict
+      if (!content.includes('androidx.core:core:')) {
+        const forcePatch = `\nconfigurations.all {\n    resolutionStrategy {\n        force 'androidx.core:core:1.15.0'\n        force 'androidx.core:core-ktx:1.15.0'\n    }\n}\n\n`;
+        content = forcePatch + content;
+      }
+
       await fs.writeFile(buildGradlePath, content);
-      console.log(`✅ Patched android/app/build.gradle for Re.Pack.`);
+      console.log(`✅ Patched android/app/build.gradle for Re.Pack and AndroidX versions.`);
     }
   }
 
