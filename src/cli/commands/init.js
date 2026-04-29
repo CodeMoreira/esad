@@ -75,7 +75,7 @@ export default {
     console.log(chalk.green(`\n🎉 ESAD Workspace Initialized successfully!`));
     console.log(chalk.cyan(`\n👉 Next steps:`));
     console.log(`   1. cd ${projectName}/${hostName}`);
-    console.log(`   2. esad host dev (to start Host)`);
+    console.log(`   2. esad dev (to start Host)`);
     console.log(`   3. esad dev (in a module folder to federate)\n`);
   } catch (err) {
     console.error(chalk.red(`\n❌ Failed to initialize workspace:`));

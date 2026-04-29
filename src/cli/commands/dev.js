@@ -22,25 +22,29 @@ const isPortInUse = (port) => new Promise((resolve) => {
   req.end();
 });
 
-const runHostDevFlow = async (cwd) => {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-  const askQuestion = (query) => new Promise((resolve) => rl.question(query, resolve));
+const runHostDevFlow = async (cwd, options = {}) => {
+  let choice = options.platform ? options.platform.charAt(0).toLowerCase() : null;
 
-  console.log(`\n${chalk.bold('ESAD Host Dev Manager')}`);
-  console.log(chalk.dim(`---------------------`));
-  console.log(`[a] Run on Android`);
-  console.log(`[i] Run on iOS`);
-  console.log(`[b] Bundler Only`);
-  console.log(`[c] Cancel`);
-  
-  const choice = (await askQuestion(`\nSelect platform: `)).toLowerCase();
+  if (!choice) {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    const askQuestion = (query) => new Promise((resolve) => rl.question(query, resolve));
+
+    console.log(`\n${chalk.bold('ESAD Host Dev Manager')}`);
+    console.log(chalk.dim(`---------------------`));
+    console.log(`[a] Run on Android`);
+    console.log(`[i] Run on iOS`);
+    console.log(`[b] Bundler Only`);
+    console.log(`[c] Cancel`);
+    
+    choice = (await askQuestion(`\nSelect platform: `)).toLowerCase();
+    rl.close();
+  }
   
   if (choice === 'c') {
     console.log(`\n❌ Cancelled.`);
-    rl.close();
     return;
   }
 
@@ -81,7 +85,6 @@ const runHostDevFlow = async (cwd) => {
 
     if (!(await waitForBundler())) {
       console.error(`\n❌ Timeout: Bundler did not respond.`);
-      rl.close();
       return;
     }
     console.log(`✅ Bundler ready!`);
@@ -93,9 +96,9 @@ const runHostDevFlow = async (cwd) => {
   } else if (choice === 'i') {
     console.log(`🍎 Launching iOS...`);
     await runProcess('react-native', ['run-ios', '--no-packager'], cwd);
+  } else if (choice === 'b') {
+    console.log(`✨ Bundler is active.`);
   }
-
-  rl.close();
 };
 
 module.exports = async (options) => {
@@ -164,7 +167,7 @@ module.exports = async (options) => {
 
   if (isHost) {
     await prepareNative(cwd, 'all');
-    await runHostDevFlow(cwd);
+    await runHostDevFlow(cwd, options);
   } else {
     console.error(chalk.red(`❌ Error: Could not detect Host or Module context.`));
     console.log(`👉 Try: esad dev <module-id>`);
