@@ -70,7 +70,7 @@ export default {
     await new Promise(res => setTimeout(res, 500));
 
     console.log(`\n📦 Installing dependencies into host (this may take a minute)...`);
-    await runProcess('npm', ['install'], { cwd: hostDir });
+    await runProcess('npm', ['install', '--legacy-peer-deps'], { cwd: hostDir });
     
     console.log(chalk.green(`\n🎉 ESAD Workspace Initialized successfully!`));
     console.log(chalk.cyan(`\n👉 Next steps:`));
