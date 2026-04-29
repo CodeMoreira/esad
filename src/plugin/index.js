@@ -66,11 +66,10 @@ function withESAD(env, options) {
               use: {
                 loader: 'babel-loader',
                 options: {
+                  babelrc: false,
+                  configFile: false,
                   presets: [
                     'babel-preset-expo',
-                  ],
-                  plugins: [
-                    ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
                   ],
                   sourceType: 'unambiguous',
                   caller: { name: 'repack' },
@@ -85,6 +84,8 @@ function withESAD(env, options) {
               use: {
                 loader: 'babel-loader',
                 options: {
+                  babelrc: false,
+                  configFile: false,
                   presets: ['@react-native/babel-preset'],
                   sourceType: 'unambiguous',
                   caller: { name: 'repack' },
