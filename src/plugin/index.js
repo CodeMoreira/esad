@@ -20,6 +20,11 @@ const { ProvidePlugin, DefinePlugin } = require('@rspack/core');
 function withESAD(env, options) {
   const { platform, dev } = env;
   const isDev = dev !== false;
+
+  // Force environment variables for babel-preset-expo and other loaders
+  process.env.EXPO_OS = platform;
+  process.env.NODE_ENV = isDev ? 'development' : 'production';
+  process.env.BABEL_ENV = isDev ? 'development' : 'production';
   const dirname = options.dirname;
   const pkgPath = path.resolve(dirname, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
