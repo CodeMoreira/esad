@@ -74,12 +74,12 @@ A step-by-step sequential view of creating, developing, and deploying modules in
 
 ### A. Host & Workspace Setup
 1. **`esad init <name>`**: Clones the host template, renames project identifiers, and installs base dependencies.
-2. **`esad host dev`**: 
-   - Verifies `android/ios` folders.
-   - Runs `expo prebuild` (if needed).
+2. **`esad dev` (at root or inside host)**: 
+   - Interactive selection: Android, iOS, or Bundler Only.
+   - Verifies `android/ios` folders and runs `expo prebuild` if missing.
    - **Automated Patch**: Injects Re.Pack configs into Gradle/Native entry points.
    - Starts Rspack Server (8081).
-   - Launches Mobile Emulator.
+   - Launches Mobile Emulator/Simulator.
 
 ### B. Module Development Cycle
 ```mermaid
@@ -104,9 +104,9 @@ sequenceDiagram
 ```
 
 ### C. Deployment Flow
-1. **`esad build`**: Performs the production build for the specific module/platform.
+1. **`esad build [host|module]`**: Performs the production build for the specific target and platform.
 2. **Bundle Generation**: Rspack generates the `.container.js.bundle` and chunks into the `./build` directory.
-3. **`esad deploy`**: Packages the `./build` folder and performs the real multipart upload to the CDN.
+3. **`esad deploy [module]`**: Packages the `./build` folder and performs the programmable upload to the CDN.
 4. **Registry Update**: The CDN Registry updates its versioning and the `mf-manifest.json`.
 5. **Instant Update**: The Host App receives the new version on the next launch (OTA) or module resolution.
 
