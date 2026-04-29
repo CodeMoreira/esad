@@ -103,6 +103,8 @@ function withESAD(env, options) {
       }),
       new DefinePlugin({
         'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
+        'process.env.EXPO_OS': JSON.stringify(platform),
+        'process.env.REPACK_PLATFORM': JSON.stringify(platform),
         '__DEV__': JSON.stringify(isDev),
       }),
       new ExpoModulesPlugin(),
