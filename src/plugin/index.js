@@ -59,7 +59,7 @@ function withESAD(env, options) {
             {
               test: /\.[cm]?[jt]sx?$/,
               include: [
-                /node_modules[\\/](react-native|@react-native|expo|expo-modules-core|@expo|react-navigation|@react-navigation|@unimodules|unimodules|native-base)/,
+                /node_modules[\\/](react-native|@react-native|expo|expo-modules-core|@expo|react-navigation|@react-navigation|@unimodules|unimodules|native-base|react-native-screens|react-native-reanimated)/,
               ],
               type: 'javascript/auto',
               resolve: { fullySpecified: false },
@@ -67,10 +67,10 @@ function withESAD(env, options) {
                 loader: 'babel-loader',
                 options: {
                   presets: [
-                    [
-                      'babel-preset-expo',
-                      { native: { disableImportExportTransform: false } },
-                    ],
+                    '@react-native/babel-preset',
+                  ],
+                  plugins: [
+                    ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
                   ],
                   sourceType: 'unambiguous',
                   caller: { name: 'repack' },
@@ -80,6 +80,7 @@ function withESAD(env, options) {
             {
               test: /\.[cm]?[jt]sx?$/,
               include: [dirname],
+              exclude: [/node_modules/],
               type: 'javascript/auto',
               use: {
                 loader: 'babel-loader',
