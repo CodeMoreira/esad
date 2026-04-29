@@ -59,7 +59,7 @@ function withESAD(env, options) {
             {
               test: /\.[cm]?[jt]sx?$/,
               include: [
-                /node_modules[\\/](react-native|@react-native|expo|expo-modules-core|@expo|react-navigation|@react-navigation|@unimodules|unimodules|native-base|react-native-screens|react-native-reanimated)/,
+                /node_modules[\\/](react-native|@react-native|expo|expo-modules-core|@expo|react-navigation|@react-navigation|@unimodules|unimodules|native-base)/,
               ],
               type: 'javascript/auto',
               resolve: { fullySpecified: false },
