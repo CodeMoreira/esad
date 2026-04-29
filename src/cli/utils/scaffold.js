@@ -86,7 +86,7 @@ async function prepareNative(cwd, platform = 'android') {
       console.log(`✅ Patched android/app/build.gradle for Re.Pack and AndroidX versions.`);
     }
 
-    const gradlePropsPath = path.join(androidDir, 'gradle.properties');
+    const gradlePropsPath = path.join(cwd, 'android', 'gradle.properties');
     if (fs.existsSync(gradlePropsPath)) {
       let props = await fs.readFile(gradlePropsPath, 'utf8');
       if (!props.includes('newArchEnabled=true')) {
