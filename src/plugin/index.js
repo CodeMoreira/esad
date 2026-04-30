@@ -76,6 +76,12 @@ function withESAD(env, options) {
                   presets: [
                     ['babel-preset-expo', { platform }],
                   ],
+                  plugins: [
+                    [
+                      require.resolve('babel-plugin-transform-inline-environment-variables'),
+                      { include: ['EXPO_OS', 'NODE_ENV'] }
+                    ]
+                  ],
                   sourceType: 'unambiguous',
                   caller: { name: 'repack', platform },
                 },
@@ -94,6 +100,12 @@ function withESAD(env, options) {
                   presets: [
                     ['babel-preset-expo', { platform }],
                   ],
+                  plugins: [
+                    [
+                      require.resolve('babel-plugin-transform-inline-environment-variables'),
+                      { include: ['EXPO_OS', 'NODE_ENV'] }
+                    ]
+                  ],
                   caller: { name: 'repack', platform },
                 },
               },
@@ -109,11 +121,6 @@ function withESAD(env, options) {
         'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
         'process.env.EXPO_OS': JSON.stringify(platform),
         'process.env.REPACK_PLATFORM': JSON.stringify(platform),
-        'process.env': JSON.stringify({
-          NODE_ENV: isDev ? 'development' : 'production',
-          EXPO_OS: platform,
-          REPACK_PLATFORM: platform,
-        }),
         '__DEV__': JSON.stringify(isDev),
       }),
       new ExpoModulesPlugin(),
