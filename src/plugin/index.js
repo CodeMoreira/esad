@@ -78,8 +78,11 @@ function withESAD(env, options) {
                   ],
                   plugins: [
                     [
-                      require.resolve('babel-plugin-transform-inline-environment-variables'),
-                      { include: ['EXPO_OS', 'NODE_ENV'] }
+                      require.resolve('babel-plugin-transform-define'),
+                      {
+                        'process.env.EXPO_OS': platform,
+                        'process.env.NODE_ENV': isDev ? 'development' : 'production',
+                      }
                     ]
                   ],
                   sourceType: 'unambiguous',
@@ -102,8 +105,11 @@ function withESAD(env, options) {
                   ],
                   plugins: [
                     [
-                      require.resolve('babel-plugin-transform-inline-environment-variables'),
-                      { include: ['EXPO_OS', 'NODE_ENV'] }
+                      require.resolve('babel-plugin-transform-define'),
+                      {
+                        'process.env.EXPO_OS': platform,
+                        'process.env.NODE_ENV': isDev ? 'development' : 'production',
+                      }
                     ]
                   ],
                   caller: { name: 'repack', platform },
