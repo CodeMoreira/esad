@@ -74,10 +74,10 @@ function withESAD(env, options) {
                   babelrc: false,
                   configFile: false,
                   presets: [
-                    'babel-preset-expo',
+                    ['babel-preset-expo', { platform }],
                   ],
                   sourceType: 'unambiguous',
-                  caller: { name: 'repack' },
+                  caller: { name: 'repack', platform },
                 },
               },
             },
@@ -89,10 +89,12 @@ function withESAD(env, options) {
               use: {
                 loader: '@callstack/repack/babel-swc-loader',
                 options: {
-                  // Allow project-level babel.config.js to be applied
                   babelrc: true,
                   sourceType: 'unambiguous',
-                  caller: { name: 'repack' },
+                  presets: [
+                    ['babel-preset-expo', { platform }],
+                  ],
+                  caller: { name: 'repack', platform },
                 },
               },
             },
