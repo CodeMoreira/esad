@@ -2,7 +2,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const Repack = require('@callstack/repack');
 const { ExpoModulesPlugin } = require('@callstack/repack-plugin-expo-modules');
-const { DefinePlugin, BannerPlugin } = require('@rspack/core');
+const { DefinePlugin } = require('@rspack/core');
 
 /**
  * ESAD Re.Pack Plugin Wrapper
@@ -38,7 +38,10 @@ function withESAD(env, options) {
   const config = {
     mode: isDev ? 'development' : 'production',
     context: dirname,
-    entry: options.entry || './index.js',
+    entry: [
+      path.resolve(__dirname, 'env-shim.js'),
+      options.entry || './index.js'
+    ],
     output: {
       path: path.resolve(dirname, 'build', platform),
       filename: 'index.bundle',
@@ -106,25 +109,13 @@ function withESAD(env, options) {
     },
     plugins: [
       new DefinePlugin({
+        '__EXPO_OS__': JSON.stringify(platform),
+        '__NODE_ENV__': JSON.stringify(isDev ? 'development' : 'production'),
+        '__REPACK_PLATFORM__': JSON.stringify(platform),
         'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
         'process.env.EXPO_OS': JSON.stringify(platform),
         'process.env.REPACK_PLATFORM': JSON.stringify(platform),
-        'process.env': JSON.stringify({
-          NODE_ENV: isDev ? 'development' : 'production',
-          EXPO_OS: platform,
-          REPACK_PLATFORM: platform,
-        }),
         '__DEV__': JSON.stringify(isDev),
-      }),
-      new BannerPlugin({
-        raw: true,
-        entryOnly: true,
-        banner: `
-          if (typeof process === 'undefined') { var process = { env: {} }; }
-          if (typeof process.env === 'undefined') { process.env = {}; }
-          process.env.EXPO_OS = '${platform}';
-          process.env.NODE_ENV = '${isDev ? 'development' : 'production'}';
-        `,
       }),
       new ExpoModulesPlugin(),
       new Repack.RepackPlugin(),
