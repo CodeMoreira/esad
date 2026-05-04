@@ -10,7 +10,9 @@ if (typeof process === 'undefined') {
   process.env = {};
 }
 
-// These placeholders are replaced by Rspack's DefinePlugin during build time
-process.env.EXPO_OS = '__EXPO_OS__';
-process.env.NODE_ENV = '__NODE_ENV__';
-process.env.REPACK_PLATFORM = '__REPACK_PLATFORM__';
+// Prevent DefinePlugin from replacing the left-hand side by using an intermediate variable and brackets
+const e = process.env;
+e['EXPO_OS'] = '__EXPO_OS__';
+e['NODE_ENV'] = '__NODE_ENV__';
+e['REPACK_PLATFORM'] = '__REPACK_PLATFORM__';
+
