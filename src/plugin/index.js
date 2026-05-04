@@ -2,7 +2,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const Repack = require('@callstack/repack');
 const { ExpoModulesPlugin } = require('@callstack/repack-plugin-expo-modules');
-const { DefinePlugin, ProvidePlugin } = require('@rspack/core');
+const { DefinePlugin } = require('@rspack/core');
 
 /**
  * ESAD Re.Pack Plugin Wrapper
@@ -76,15 +76,6 @@ function withESAD(env, options) {
                   presets: [
                     ['babel-preset-expo', { platform }],
                   ],
-                  plugins: [
-                    [
-                      require.resolve('babel-plugin-transform-define'),
-                      {
-                        'process.env.EXPO_OS': platform,
-                        'process.env.NODE_ENV': isDev ? 'development' : 'production',
-                      }
-                    ]
-                  ],
                   sourceType: 'unambiguous',
                   caller: { name: 'repack', platform },
                 },
@@ -102,15 +93,6 @@ function withESAD(env, options) {
                   sourceType: 'unambiguous',
                   presets: [
                     ['babel-preset-expo', { platform }],
-                  ],
-                  plugins: [
-                    [
-                      require.resolve('babel-plugin-transform-define'),
-                      {
-                        'process.env.EXPO_OS': platform,
-                        'process.env.NODE_ENV': isDev ? 'development' : 'production',
-                      }
-                    ]
                   ],
                   caller: { name: 'repack', platform },
                 },
@@ -133,9 +115,6 @@ function withESAD(env, options) {
           REPACK_PLATFORM: platform,
         }),
         '__DEV__': JSON.stringify(isDev),
-      }),
-      new ProvidePlugin({
-        process: 'process/browser',
       }),
       new ExpoModulesPlugin(),
       new Repack.RepackPlugin(),
@@ -162,6 +141,9 @@ function withESAD(env, options) {
         }
       })
     ],
+    experiments: {
+      parallelLoader: false,
+    },
   };
 
   // Add Host-specific DevServer magic for Expo
