@@ -2,7 +2,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const Repack = require('@callstack/repack');
 const { ExpoModulesPlugin } = require('@callstack/repack-plugin-expo-modules');
-const { DefinePlugin, BannerPlugin } = require('@rspack/core');
+const { DefinePlugin, ProvidePlugin } = require('@rspack/core');
 
 /**
  * ESAD Re.Pack Plugin Wrapper
@@ -134,15 +134,8 @@ function withESAD(env, options) {
         }),
         '__DEV__': JSON.stringify(isDev),
       }),
-      new BannerPlugin({
-        raw: true,
-        entryOnly: true,
-        banner: `
-          global.process = global.process || { env: {} };
-          global.process.env.EXPO_OS = '${platform}';
-          global.process.env.NODE_ENV = '${isDev ? 'development' : 'production'}';
-          global.process.env.REPACK_PLATFORM = '${platform}';
-        `,
+      new ProvidePlugin({
+        process: 'process/browser',
       }),
       new ExpoModulesPlugin(),
       new Repack.RepackPlugin(),
