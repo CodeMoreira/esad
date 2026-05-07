@@ -41,6 +41,7 @@ function withESAD(env, options) {
             loader: '@callstack/repack/babel-swc-loader',
             options: {
               parallel: true,
+              hideParallelModeWarning: true,
             },
           },
         },

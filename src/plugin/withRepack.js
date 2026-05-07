@@ -39,7 +39,7 @@ const withESADRepack = (config) => {
       if (!contents.includes('bundleCommand = "repack-bundle"')) {
         contents = contents.replace(
           /react \{/,
-          'react {\n    bundleCommand = "repack-bundle"\n    bundleConfig = "rspack.config.mjs"'
+          'react {\n    bundleCommand = "repack-bundle"\n    bundleConfig = file("../../rspack.config.mjs")'
         );
       }
 
