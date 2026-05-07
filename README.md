@@ -1,88 +1,88 @@
-# ESAD (Easy Super App Development) 🚀
+# ESAD: Easy Super App Development 🚀
 
-Zero-Config CLI and DevTools for React Native Module Federation + Expo.
+**Zero-Config CLI & Framework for React Native Module Federation + Expo.**
 
-ESAD is a unified toolkit designed to abstract all the complexity from Super App development using **Re.Pack (Rspack)** and **Expo**. It provides a professional, linear workflow from scaffolding to deployment.
+ESAD is a unified toolkit designed to abstract all the complexity of Super App development. It bridges **Expo SDK 52** and **Re.Pack 5 (Rspack)** into a professional, linear workflow.
 
 ---
 
-## 🏗️ CLI Workflow (V2)
+## 🔥 Key Features
+
+- **⚡ Zero-Config Native**: Automatic Android/iOS patching via **Expo Config Plugins**. No more manual Gradle or Manifest edits.
+- **🚀 Rspack Powered**: Blazing fast bundle generation for both Host and Remote Modules.
+- **🛡️ Authenticated Remotes**: Built-in support for **JWT-signed bundle resolution** and dynamic module discovery.
+- **📦 Shared Memory Bridge**: Reactive global state across federation boundaries using the ESAD Client SDK.
+- **🧹 Lifecycle Maestro**: Automated `prebuild`, script fixing, and dev-server management.
+
+---
+
+## 🏗️ Quick Start (V2)
 
 ### 1. Initialize a Workspace
 Creates the project root, a programmable `esad.config.js`, and the Host Application.
 ```bash
-npx @codemoreira/esad init my-project
+npx @codemoreira/esad init my-super-app
 ```
 
 ### 2. Expand your Workspace
-Create new Federated Modules or a Local Registry/CDN.
+Create new Federated Modules with built-in navigation and shared state examples.
 ```bash
-esad create my-module   # Creates a new module (Feature)
-esad create --type cdn  # Scaffolds a local registry for testing
+esad create my-feature --type module
 ```
 
-### 3. Development Manager (Unified)
-The `dev` command is the single entry point for development. It automatically detects if it should run the Host or a Module.
+### 3. Development Manager (The Maestro)
+The `dev` command handles everything: Prebuilds, Script Fixing, and Native Launch.
 
-**Run the Host App (Interactive):**
+**Run the Host App:**
 ```bash
 esad dev
 ```
-*Allows selecting Android, iOS, or Bundler Only. Automatically patches native files.*
+*Choose Android or iOS. The CLI will automatically run `expo prebuild` if native folders are missing.*
 
-**Run a specific Module:**
+**Run a specific Module (in a separate terminal):**
 ```bash
-esad dev my-module --port 9000
-```
-*Starts the module server and updates the Host's local mapping automatically.*
-
-### 4. Build & Deploy
-Prepare and push your features to the registry.
-
-**Build for Production:**
-```bash
-esad build my-module --platform android
-```
-
-**Execute Programmable Deploy:**
-```bash
-esad deploy my-module --version 1.0.0
+esad dev my-feature --port 9000
 ```
 
 ---
 
-## 🛠️ Library Usage
+## 🛠️ Toolset Usage
 
 ### 🎨 Bundler Plugin (`@codemoreira/esad/plugin`)
-Wrap your configuration to enable ESAD's smart resolution and redirection logic:
+The `withESAD` wrapper automates Module Federation v2 setup and dynamic exposes:
 ```javascript
 import { withESAD } from '@codemoreira/esad/plugin';
 
-export default withESAD({
-  type: 'module', // or 'host'
-  id: 'my-mini-app'
+export default withESAD(env, {
+  type: 'module', 
+  id: 'my-feature',
+  dirname: __dirname
 });
 ```
 
-### ⚡ Global State SDK (`@codemoreira/esad/client`)
+### ⚡ Client SDK (`@codemoreira/esad/client`)
 Share state across the Host and all Remote Modules reactively:
 ```javascript
 import { useESADState } from '@codemoreira/esad/client';
 
-const [user, setUser] = useESADState('user');
+const [user, setUser] = useESADState('auth_user');
+const [counter, setCounter] = useESADState('global_counter', 0);
 ```
 
 ---
 
-## 🏠 Template Features (Host & Module)
-ESAD templates provide a high-end starting point:
-- **🚀 Rspack + Re.Pack**: Blazing fast builds.
-- **📱 Professional Architecture**: Modular structure (`src/api`, `src/components`, `src/navigation`).
-- **🛤️ Dynamic Navigation**: Pre-configured Module Viewer with **Suspense** and **ErrorBoundary** support.
-- **🔐 State-Driven Auth**: Built-in login and session management via the ESAD SDK.
-- **🔧 Automated Native Patching**: Zero-config injection into Android/iOS projects.
+## 🏛️ Architecture & Deep Dive
+For technical diagrams, lifecycle details, and the "Zero-Config" philosophy, see [ESAD_ARCHITECTURE.md](./ESAD_ARCHITECTURE.md).
 
 ---
 
-## 🎨 Architecture & Workflow
-For technical diagrams and the full lifecycle, see [ESAD_ARCHITECTURE.md](./ESAD_ARCHITECTURE.md).
+## 🏠 Modern Templates
+ESAD templates provide a high-end starting point:
+- **Navigation Multi-página**: Federated modules with internal stack navigators.
+- **Real Auth**: Integration-ready for Simple-CDN registries via JWT.
+- **Smart UI**: Pre-configured Skeletons, Typography, and Modern Dark Mode.
+
+---
+
+> [!TIP]
+> **Why ESAD?** React Native Module Federation is hard. ESAD makes it as easy as a standard Expo app while keeping the power of dynamic micro-frontends.

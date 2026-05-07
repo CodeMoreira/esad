@@ -2,128 +2,62 @@ const path = require('node:path');
 const fs = require('node:fs');
 const Repack = require('@callstack/repack');
 const { ExpoModulesPlugin } = require('@callstack/repack-plugin-expo-modules');
-const { DefinePlugin } = require('@rspack/core');
 
 /**
- * ESAD Re.Pack Plugin Wrapper
- * Abstracts away the boilerplate of Module Federation and SDK integration for SuperApps.
+ * ESAD Re.Pack Plugin Wrapper (v2.0 - POC Mirror)
+ * Totalmente alinhado com a POC funcional para Expo 52 + Re.Pack 5.
  * 
  * @param {Object} env Rspack environment
  * @param {Object} options 
- * @param {string} options.type 'host' | 'module'
- * @param {string} options.id Unique module or host ID
- * @param {string} options.dirname Base directory (__dirname)
- * @param {Object} [options.shared] Additional shared dependencies
- * @param {Object} [options.exposes] Modules to expose (for modules)
- * @param {Object} [options.remotes] Remote modules (for host)
  */
 function withESAD(env, options) {
   const { platform, dev } = env;
   const isDev = dev !== false;
 
-  // Force environment variables for babel-preset-expo and other loaders
-  process.env.EXPO_OS = platform;
-  process.env.NODE_ENV = isDev ? 'development' : 'production';
-  process.env.BABEL_ENV = isDev ? 'development' : 'production';
   const dirname = options.dirname;
   const pkgPath = path.resolve(dirname, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const id = options.id.replace(/-/g, '_');
+  
   const sdkPkgPath = path.resolve(__dirname, '..', '..', 'package.json');
   const sdkPkg = JSON.parse(fs.readFileSync(sdkPkgPath, 'utf8'));
   const clientPath = path.resolve(__dirname, '..', 'client', 'index.js');
 
-  console.log(`[ESAD] Applying Mega-Zero-Config profile for ${options.type.toUpperCase()} (${platform}): ${id}`);
-
-  const config = {
-    mode: isDev ? 'development' : 'production',
+  return Repack.defineRspackConfig({
     context: dirname,
-    entry: [
-      path.resolve(__dirname, 'env-shim.js'),
-      options.entry || './index.js'
-    ],
-    output: {
-      path: path.resolve(dirname, 'build', platform),
-      filename: 'index.bundle',
-      clean: true,
-    },
+    mode: isDev ? 'development' : 'production',
+    entry: options.entry || './index.js',
     resolve: {
       ...Repack.getResolveOptions(),
-      alias: {
-        '@': path.resolve(dirname, '.'),
-        // Internal MFv2 & Re.Pack Aliases (Magic)
-        '@module-federation/runtime/helpers': path.resolve(dirname, 'node_modules/@module-federation/runtime/dist/helpers.js'),
-        '@module-federation/error-codes/browser': path.resolve(dirname, 'node_modules/@module-federation/error-codes/dist/browser.cjs'),
-        '@module-federation/sdk': path.resolve(dirname, 'node_modules/@module-federation/sdk'),
-        
-        ...Repack.getResolveOptions().alias,
-        ...(options.alias || {}),
-      }
+      conditionNames: ['require', 'import', 'module', 'browser', 'react-native'],
+      exportsFields: ['exports'],
     },
     module: {
       rules: [
         {
-          oneOf: [
-            {
-              test: /\.[cm]?[jt]sx?$/,
-              include: [
-                /node_modules[\\/](react-native|@react-native|expo|expo-modules-core|@expo|react-navigation|@react-navigation|@unimodules|unimodules|native-base)/,
-              ],
-              type: 'javascript/auto',
-              resolve: { fullySpecified: false },
-              use: {
-                loader: '@callstack/repack/babel-swc-loader',
-                options: {
-                  babelrc: false,
-                  configFile: false,
-                  presets: [
-                    ['babel-preset-expo', { platform }],
-                  ],
-                  sourceType: 'unambiguous',
-                  caller: { name: 'repack', platform },
-                },
-              },
+          test: /\.[cm]?[jt]sx?$/,
+          type: 'javascript/auto',
+          use: {
+            loader: '@callstack/repack/babel-swc-loader',
+            options: {
+              parallel: true,
             },
-            {
-              test: /\.[cm]?[jt]sx?$/,
-              include: [dirname],
-              exclude: [/node_modules/],
-              type: 'javascript/auto',
-              use: {
-                loader: '@callstack/repack/babel-swc-loader',
-                options: {
-                  babelrc: true,
-                  sourceType: 'unambiguous',
-                  presets: [
-                    ['babel-preset-expo', { platform }],
-                  ],
-                  caller: { name: 'repack', platform },
-                },
-              },
-            },
-            ...Repack.getJsTransformRules(),
-          ]
+          },
         },
         ...Repack.getAssetTransformRules(),
       ],
     },
     plugins: [
-      new DefinePlugin({
-        '__EXPO_OS__': JSON.stringify(platform),
-        '__NODE_ENV__': JSON.stringify(isDev ? 'development' : 'production'),
-        '__REPACK_PLATFORM__': JSON.stringify(platform),
-        'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
-        'process.env.EXPO_OS': JSON.stringify(platform),
-        'process.env.REPACK_PLATFORM': JSON.stringify(platform),
-        '__DEV__': JSON.stringify(isDev),
-      }),
-      new ExpoModulesPlugin(),
       new Repack.RepackPlugin(),
       new Repack.plugins.ModuleFederationPluginV2({
         name: id,
         filename: `${id}.container.js.bundle`,
         remotes: options.remotes || {},
-        ...(options.type === 'module' ? { exposes: options.exposes || {} } : {}),
+        ...(options.type === 'module' ? { 
+          exposes: options.exposes || {
+            './Main': options.entry || './index.js'
+          } 
+        } : {}),
         dts: false,
         dev: isDev,
         shared: {
@@ -140,35 +74,10 @@ function withESAD(env, options) {
           },
           ...(options.shared || {})
         }
-      })
+      }),
+      new ExpoModulesPlugin(),
     ],
-    experiments: {
-      parallelLoader: false,
-    },
-  };
-
-  // Add Host-specific DevServer magic for Expo
-  if (options.type === 'host') {
-    config.devServer = {
-      setupMiddlewares: (middlewares) => {
-        middlewares.unshift((req, res, next) => {
-          if (req.url.startsWith('/.expo/.virtual-metro-entry.bundle')) {
-            const query = req.url.split('?')[1];
-            const isMap = req.url.includes('.map');
-            const target = isMap ? '/index.bundle.map' : '/index.bundle';
-            const location = query ? `${target}?${query}` : target;
-            res.writeHead(302, { Location: location });
-            res.end();
-            return;
-          }
-          next();
-        });
-        return middlewares;
-      },
-    };
-  }
-
-  return config;
+  });
 }
 
 module.exports = { withESAD };

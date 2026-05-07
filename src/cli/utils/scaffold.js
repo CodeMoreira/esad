@@ -38,6 +38,13 @@ async function renameProject(targetDir, newName) {
       if (appJson.expo.android) {
         appJson.expo.android.package = `com.anonymous.${newName.replace(/[^a-zA-Z0-9]/g, '')}`;
       }
+      
+      // Auto-register ESAD Expo Config Plugin
+      if (!appJson.expo.plugins) appJson.expo.plugins = [];
+      if (!appJson.expo.plugins.includes('@codemoreira/esad/expo-plugin')) {
+        appJson.expo.plugins.push('@codemoreira/esad/expo-plugin');
+        console.log(`✅ Registered @codemoreira/esad/expo-plugin in app.json.`);
+      }
     } else {
       appJson.name = newName;
       appJson.slug = newName;
@@ -60,44 +67,32 @@ async function renameProject(targetDir, newName) {
 }
 
 /**
- * Prepares the native folders and applies Re.Pack patches
+ * Prepares the native folders and applies Re.Pack patches via Config Plugin
  */
 async function prepareNative(cwd, platform = 'android') {
-  if (!fs.existsSync(path.join(cwd, 'android')) && (platform === 'android' || platform === 'all')) {
-    console.log(`📦 Native folder not found. Running expo prebuild...`);
-    await runProcess('npx', ['expo', 'prebuild', '--platform', 'android'], cwd);
-  }
+  const hasAndroid = fs.existsSync(path.join(cwd, 'android'));
+  const hasIos = fs.existsSync(path.join(cwd, 'ios'));
 
-  // Apply Gradle Patch (Android)
-  const buildGradlePath = path.join(cwd, 'android/app/build.gradle');
-  if (fs.existsSync(buildGradlePath)) {
-    let content = await fs.readFile(buildGradlePath, 'utf8');
-    if (!content.includes('project.ext.react')) {
-      const patch = `\nproject.ext.react = [\n    bundleCommand: "repack-bundle",\n    bundleConfig: "rspack.config.mjs"\n]\n\n`;
-      content = content.replace(/react \{/, `${patch}react {`);
-      
-      // Force androidx.core version to avoid SDK 36 requirement conflict
-      if (!content.includes('androidx.core:core:')) {
-        const forcePatch = `\nconfigurations.all {\n    resolutionStrategy {\n        force 'androidx.core:core:1.15.0'\n        force 'androidx.core:core-ktx:1.15.0'\n    }\n}\n\n`;
-        content = forcePatch + content;
-      }
+  if ((!hasAndroid && (platform === 'android' || platform === 'all')) || 
+      (!hasIos && (platform === 'ios' || platform === 'all'))) {
+    
+    console.log(`\n📦 Native folder(s) missing. Running expo prebuild...`);
+    await runProcess('npx', ['expo', 'prebuild', '--platform', platform === 'all' ? 'all' : platform], cwd);
 
-      await fs.writeFile(buildGradlePath, content);
-      console.log(`✅ Patched android/app/build.gradle for Re.Pack and AndroidX versions.`);
-    }
-
-    const gradlePropsPath = path.join(cwd, 'android', 'gradle.properties');
-    if (fs.existsSync(gradlePropsPath)) {
-      let props = await fs.readFile(gradlePropsPath, 'utf8');
-      if (!props.includes('newArchEnabled=true')) {
-        props += '\nnewArchEnabled=true\n';
-        await fs.writeFile(gradlePropsPath, props);
-        console.log(`✅ Enabled New Architecture in android/gradle.properties.`);
-      }
+    // FIX SCRIPTS: Revert Expo's overwrite and point to ESAD CLI
+    console.log(`\n🧹 Cleaning up package.json scripts (pointing to ESAD CLI)...`);
+    const pkgPath = path.join(cwd, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = await fs.readJson(pkgPath);
+      pkg.scripts.android = 'esad dev --platform android';
+      pkg.scripts.ios = 'esad dev --platform ios';
+      pkg.scripts.start = 'esad dev';
+      await fs.writeJson(pkgPath, pkg, { spaces: 2 });
+      console.log(`✅ Scripts updated to use ESAD CLI (start, android, ios).`);
     }
   }
 
-  // Create react-native.config.js if missing
+  // Create react-native.config.js if missing (Essential for Re.Pack commands)
   const rnConfigPath = path.join(cwd, 'react-native.config.js');
   if (!fs.existsSync(rnConfigPath)) {
     const content = `module.exports = {\n  commands: require('@callstack/repack/commands/rspack'),\n};\n`;

@@ -1,149 +1,104 @@
-# ESAD: Complete Architecture & Lifecycle Diagrams
+# ESAD: Architecture & Zero-Config Lifecycle (v2.0)
 
-This guide details the technical architecture and the full development/deployment lifecycle of a SuperApp built with the **ESAD** framework.
+This document defines the high-level architecture and the automated development lifecycle of the **ESAD** ecosystem, powered by **Expo SDK 52**, **Re.Pack 5.2.5**, and **Rspack**.
 
 ---
 
-## 🏗️ 1. Detailed System Architecture
-This diagram illustrates the separation of concerns and the plumbing between the Host, multiple Federated Modules, the ESAD environment, and the distribution layer.
+## 🏗️ 1. System Architecture: The "Zero-Config" Foundation
+
+ESAD moves away from manual native patching toward a **Plugin-Driven Architecture**. The native environment is ephemeral (generated via Expo Prebuild) and automatically optimized for Module Federation.
 
 ```mermaid
 graph TB
-    subgraph "Local Environment (ESAD CLI)"
-        CLI["ESAD CLI (@codemoreira/esad)"]
-        T_Host["Host Template"]
-        T_Mod["Module Template"]
+    subgraph "Infrastructure Layer (Simple-CDN)"
+        REG["Registry API<br/>(Dynamic Remotes & Auth)"]
+        CDN["CDN Storage<br/>(*.bundle & assets)"]
     end
 
-    subgraph "Infrastructure Layer (CDN & Registry)"
-        REG["Module Registry<br/>(mf-manifest.json)"]
-        CDN["CDN Storage<br/>(*.bundle assets)"]
+    subgraph "SuperApp Host (Expo Managed)"
+        H_Native["Native Android/iOS<br/><i>Auto-Patched by Config Plugin</i>"]
+        H_Plugin["ESAD Expo Plugin<br/>(Kotlin 1.9.25, ABI Filters)"]
+        H_Rspack["Rspack Config<br/>(withESAD Wrapper)"]
+        H_Resolver["Dynamic Resolver<br/>(JWT Auth + RemoteConfig)"]
     end
 
-    subgraph "SuperApp Host Project"
-        H_Native["Native App (Android/iOS)<br/><i>Patched: MainApplication / build.gradle</i>"]
-        H_Rspack["Rspack Host Config<br/>(withESAD Wrapper)"]
-        H_Entry["index.js<br/>(AppRegistry: 'main')"]
-        H_SM["Re.Pack ScriptManager"]
+    subgraph "Federated Modules (Independent)"
+        Mod_1["Feature A<br/>(Dev Port: 9000)"]
+        Mod_N["Feature N..."]
     end
 
-    subgraph "Federated Modules (Independent Projects)"
-        Mod_1["Module: Feature A<br/>(Port 9000 / CDN Path)"]
-        Mod_2["Module: Feature B<br/>(Port 9001 / CDN Path)"]
-        Mod_N["Module: Feature N..."]
+    subgraph "Shared SDK"
+        SDK["@codemoreira/esad/client<br/>(useESADState / Global Auth)"]
     end
 
-    subgraph "Shared Core (SDK)"
-        SDK["ESAD Client SDK<br/>(Global State & Auth)"]
-    end
-
-    %% Scaffolding
-    CLI -->|1. Clones| T_Host
-    CLI -->|1. Clones| T_Mod
-    CLI -->|2. Scaffolds| H_Native
-    
-    %% Host Execution
-    H_Native <-->|Loads| H_Entry
-    H_Entry -->|Configures| H_SM
-    H_SM -.->|Queries| REG
-    H_SM -.->|Fetches Bundles| CDN
-    
-    %% Module Loading
-    CDN --- Mod_1
-    CDN --- Mod_2
-    CDN --- Mod_N
+    %% Flows
+    H_Native -->|Runs| H_Rspack
+    H_Rspack -->|Injects| H_Resolver
+    H_Resolver -->|Fetches Manifest| REG
+    H_Resolver -->|Requests Bundles| CDN
     
     %% Communication
     SDK <-->|Shared Context| H_Native
     SDK <-->|Shared Context| Mod_1
-    SDK <-->|Shared Context| Mod_2
-
-    classDef core fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef infra fill:#f3e5f5,stroke:#4a148c,stroke-width:1px;
-    classDef module fill:#fff3e0,stroke:#e65100,stroke-width:1px;
+    SDK <-->|Shared Context| Mod_N
     
-    class CLI,H_Native,H_Entry,H_SM,Config,SDK core;
-    class REG,CDN infra;
-    class Mod_1,Mod_2,Mod_N module;
+    %% Scaffolding
+    H_Plugin -->|Automation| H_Native
 ```
 
 ---
 
-## 🚀 2. End-to-End Workflow (Development to Deploy)
-A step-by-step sequential view of creating, developing, and deploying modules in the ESAD ecosystem.
+## 🚀 2. The Development Lifecycle
 
-### A. Host & Workspace Setup
-1. **`esad init <name>`**: Clones the host template, renames project identifiers, and installs base dependencies.
-2. **`esad dev` (at root or inside host)**: 
-   - Interactive selection: Android, iOS, or Bundler Only.
-   - Verifies `android/ios` folders and runs `expo prebuild` if missing.
-   - **Automated Patch**: Injects Re.Pack configs into Gradle/Native entry points.
-   - Starts Rspack Server (8081).
-   - Launches Mobile Emulator/Simulator.
+ESAD automates the complex "plumbing" of React Native Module Federation.
 
-### B. Module Development Cycle
-```mermaid
-sequenceDiagram
-    participant Dev as Developer
-    participant CLI as ESAD CLI
-    participant Mod as Module Project
-    participant Config as esad.config.js
-    participant Host as Running Host
+### A. Initialization & Scaffolding
+- **`esad init <name>`**: Clones the state-of-the-art Host template.
+- **Auto-Registration**: The CLI automatically injects `@codemoreira/esad/expo-plugin` into the `app.json`.
+- **Zero-Config Exposes**: Modules automatically expose their main entry point as `./Main` without requiring manual Rspack edits.
 
-    Dev->>CLI: esad create <name> --type module
-    CLI->>CLI: Clone Template & Inject Context
-    
-    Dev->>CLI: esad dev [moduleId] --port 9000
-    CLI->>Mod: Start Rspack (Port 9000)
-    CLI->>Config: [DevMode] Set Module 'X' URL to localhost:9000
-    
-    Note over Host: Host reloads/fetches
-    Host->>Config: Read DevMode Mappings
-    Config-->>Host: Redirects Module 'X' to localhost:9000
-    Host->>Mod: Fetch Bundle from 9000
-```
-
-### C. Deployment Flow
-1. **`esad build [host|module]`**: Performs the production build for the specific target and platform.
-2. **Bundle Generation**: Rspack generates the `.container.js.bundle` and chunks into the `./build` directory.
-3. **`esad deploy [module]`**: Packages the `./build` folder and performs the programmable upload to the CDN.
-4. **Registry Update**: The CDN Registry updates its versioning and the `mf-manifest.json`.
-5. **Instant Update**: The Host App receives the new version on the next launch (OTA) or module resolution.
+### B. The "dev" Flow (The Maestro)
+When you run `esad dev`, the following sequence occurs:
+1. **Native Check**: Verifies if `android/` or `ios/` folders exist.
+2. **Auto-Prebuild**: If missing, runs `npx expo prebuild` to generate clean native code.
+3. **Script Fixer**: Automatically reverts `package.json` scripts from Expo defaults to `esad dev --platform`.
+4. **Bundler Check**: Detects if an Rspack server is already running on port 8081/9000.
+5. **Native Launch**: Launches the app using the standard React Native CLI (avoiding Metro conflicts).
 
 ---
 
-## 🔥 3. Comparison: Vanilla Re.Pack vs ESAD
-*Why is ESAD needed for presentations?*
+## 🛡️ 3. Security & Dynamic Resolution
 
-| Feature | Vanilla Re.Pack | ESAD Framework |
+Unlike standard Module Federation (which uses static URLs), ESAD implements a **Authenticated Dynamic Resolver**.
+
+1. **Login**: The user authenticates against the Simple-CDN Registry.
+2. **Remote Mapping**: The Registry returns a map of authorized modules for that specific user.
+3. **JWT Injection**: Every bundle request (`.bundle`) is intercepted by the Re.Pack `ScriptManager`, which injects the Bearer Token into the headers.
+4. **Resilience**: If a remote fails to load, the `SafeRemote` Error Boundary prevents the entire SuperApp from crashing.
+
+---
+
+## ⚖️ 4. Comparison: Vanilla vs ESAD v2.0
+
+| Feature | Vanilla Re.Pack / Expo | ESAD Ecosystem |
 | :--- | :--- | :--- |
-| **Setup** | Manual (Hours/Days) | Command-line (Minutes) |
-| **Native Patching** | Manual (Error-prone) | Automated (CLI-driven) |
-| **Expo Integration** | Complex (Metro conflicts) | Transparent (Zero-Config Redirection) |
-| **Shared State** | Peer-dependency hell | Built-in SDK Wrapper |
-| **Scaffolding** | Manual Boilerplate | GitHub Template Cloning |
-| **Registry Management** | Custom Implementation | Integrated CDN/MF-Manifest logic |
+| **Kotlin Version** | 1.8.x (Default) | 1.9.25 (Automated) |
+| **ABI Filtering** | Manual Gradle edits | Automatic (Config Plugin) |
+| **Module Exposes** | Manual Map in Config | Auto-detected (Zero-Config) |
+| **Authentication** | Custom implementation | Native JWT + Header Injection |
+| **Scripts** | Fragile `expo run` | Robust `esad dev` wrapper |
+| **Native Folders** | Version controlled | Git-ignored (Ephemeral/Prebuild) |
 
 ---
 
-## 🏛️ 4. Global State Bridge
-Diagram showing how the SDK bridges the Host and the Remote Modules.
+## 🏛️ 5. Shared State (The Bridge)
+The `useESADState` hook creates a memory bridge between the Host and Remotes.
 
-```mermaid
-graph LR
-    subgraph "Application Memory"
-        subgraph "Host Context"
-            H_State["Global State Store"]
-        end
-        
-        subgraph "Remote Module Frame"
-            M_Hook["useESADState()"]
-        end
-    end
+- **Host**: Defines the "Source of Truth" (e.g., `auth_user`).
+- **Remote**: Consumes or updates the state as if it were a local `useState`.
+- **Sync**: Powered by a Singleton React Context that is shared across the federated boundaries.
 
-    M_Hook <-->|Read/Write| H_State
-    H_State --- Bridge["React Context Bridge (Singleton)"]
-```
+---
 
-> [!TIP]
-> This "Singleton Bridge" is the core reason why federated modules feel native and integrated, rather than isolated webviews or separate apps.
+> [!IMPORTANT]
+> **Zero-Config Philosophy**: The developer should focus on business logic. All native infrastructure, ABI filters, and bundler complexity are handled by the ESAD toolset.
