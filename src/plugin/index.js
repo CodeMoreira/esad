@@ -2,6 +2,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const Repack = require('@callstack/repack');
 const { ExpoModulesPlugin } = require('@callstack/repack-plugin-expo-modules');
+const rspack = require('@rspack/core');
 
 /**
  * ESAD Re.Pack Plugin Wrapper (v2.0 - POC Mirror)
@@ -49,6 +50,10 @@ function withESAD(env, options) {
       ],
     },
     plugins: [
+      new rspack.DefinePlugin({
+        'process.env.EXPO_OS': JSON.stringify(platform),
+        'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
+      }),
       new Repack.RepackPlugin(),
       new Repack.plugins.ModuleFederationPluginV2({
         name: id,

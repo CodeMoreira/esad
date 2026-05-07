@@ -33,6 +33,8 @@ async function renameProject(targetDir, newName) {
   if (fs.existsSync(appJsonPath)) {
     const appJson = await fs.readJson(appJsonPath);
     if (appJson.expo) {
+      appJson.name = newName;
+      appJson.displayName = newName;
       appJson.expo.name = newName;
       appJson.expo.slug = newName;
       if (appJson.expo.android) {
