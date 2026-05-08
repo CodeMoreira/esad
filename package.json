@@ -1,6 +1,6 @@
 {
   "name": "@codemoreira/esad",
-  "version": "2.0.1-36",
+  "version": "2.0.1-37",
   "description": "Easy Super App Development - Zero-Config CLI and DevTools for React Native Module Federation",
   "main": "src/plugin/index.js",
   "types": "./src/plugin/index.d.ts",
@@ -40,12 +40,13 @@
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "cross-spawn": "^7.0.3",
+    "dotenv": "^17.4.2",
     "fs-extra": "^11.2.0",
+    "@rspack/core": "^1.7.8",
+    "@callstack/repack": "^5.2.5",
     "jiti": "^2.6.1"
   },
   "devDependencies": {
-    "@callstack/repack": "^5.2.5",
-    "@rspack/core": "^1.7.8",
     "@types/react": "^18.0.0 || ^19.0.0"
   }
 }
