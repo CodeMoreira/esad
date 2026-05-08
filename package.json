@@ -1,6 +1,6 @@
 {
   "name": "@codemoreira/esad",
-  "version": "2.0.1-35",
+  "version": "2.0.1-36",
   "description": "Easy Super App Development - Zero-Config CLI and DevTools for React Native Module Federation",
   "main": "src/plugin/index.js",
   "types": "./src/plugin/index.d.ts",
@@ -32,29 +32,20 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "overrides": {
-    "axios": "1.15.0",
-    "@xmldom/xmldom": "0.9.9"
-  },
   "dependencies": {
     "@callstack/repack-plugin-expo-modules": "^5.2.5",
+    "@expo/config-plugins": "^55.0.8",
     "adm-zip": "^0.5.10",
+    "babel-plugin-transform-define": "^2.1.4",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "cross-spawn": "^7.0.3",
-    "form-data": "^4.0.0",
     "fs-extra": "^11.2.0",
-    "jiti": "^2.6.1",
-    "node-fetch": "^2.7.0",
-    "process": "^0.11.10"
+    "jiti": "^2.6.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
     "@callstack/repack": "^5.2.5",
-    "@module-federation/enhanced": "^2.4.0",
     "@rspack/core": "^1.7.8",
-    "@types/react": "~18.3.12",
-    "babel-plugin-transform-define": "^2.1.4",
-    "babel-preset-expo": "~12.0.0"
+    "@types/react": "^18.0.0 || ^19.0.0"
   }
 }
