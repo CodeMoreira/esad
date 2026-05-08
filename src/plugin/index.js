@@ -14,6 +14,8 @@ function withESAD(env, options) {
   const { platform, dev } = env;
   const isDev = dev !== false;
 
+  process.env.EXPO_OS = platform;
+
   const dirname = options.dirname;
   const pkgPath = path.resolve(dirname, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
@@ -40,7 +42,20 @@ function withESAD(env, options) {
           use: {
             loader: '@callstack/repack/babel-swc-loader',
             parallel: true,
-            options: {},
+            options: {
+              env: {
+                EXPO_OS: platform,
+              },
+              // Injetamos um plugin extra de transformação apenas para o EXPO_OS
+              plugins: [
+                [
+                  require.resolve('babel-plugin-transform-define'),
+                  {
+                    'process.env.EXPO_OS': platform,
+                  },
+                ],
+              ],
+            },
           },
         },
         ...Repack.getAssetTransformRules(),
