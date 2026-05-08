@@ -48,6 +48,11 @@ const runHostDevFlow = async (cwd, options = {}) => {
     return;
   }
 
+  const platformName = choice === 'a' ? 'android' : choice === 'i' ? 'ios' : 'all';
+  if (choice !== 'b') {
+    await prepareNative(cwd, platformName);
+  }
+
   const portBusy = await isPortInUse(8081);
   let shouldStartBundler = true;
 
@@ -128,7 +133,7 @@ module.exports = async (options) => {
     const moduleId = selectedModuleId || pkg.name;
     const port = options.port || '8081';
 
-    await prepareNative(cwd, 'all');
+    await prepareNative(cwd, 'none');
 
     const { updateDevMode, removeDevMode, syncContextDownwards } = require('../utils/transformer');
     
@@ -166,7 +171,6 @@ module.exports = async (options) => {
   }
 
   if (isHost) {
-    await prepareNative(cwd, 'all');
     await runHostDevFlow(cwd, options);
   } else {
     console.error(chalk.red(`❌ Error: Could not detect Host or Module context.`));

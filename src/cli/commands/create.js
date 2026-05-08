@@ -49,7 +49,11 @@ const createCdn = async (cdnName) => {
   const config = await configObj.load();
   const projectName = config.default?.projectName || config.projectName;
 
-  const finalCdnName = cdnName || `${projectName}-cdn`;
+  let finalCdnName = `${projectName}-cdn`;
+  if (cdnName) {
+    const isPrefixed = cdnName.startsWith(`${projectName}-`);
+    finalCdnName = isPrefixed ? cdnName : `${projectName}-${cdnName}`;
+  }
   const cdnPath = path.join(process.cwd(), finalCdnName);
 
   if (fs.existsSync(cdnPath)) {
@@ -64,6 +68,15 @@ const createCdn = async (cdnName) => {
     await runProcess('git', ['clone', 'https://github.com/CodeMoreira/simple-cdn.git', finalCdnName]);
     console.log(`🧹 Cleaning up template metadata...`);
     await fs.remove(path.join(cdnPath, '.git'));
+    
+    // Rename package.json to match finalCdnName
+    const pkgPath = path.join(cdnPath, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = await fs.readJson(pkgPath);
+      pkg.name = finalCdnName;
+      await fs.writeJson(pkgPath, pkg, { spaces: 2 });
+    }
+
     console.log(`\n📥 Installing dependencies (this may take a minute)...`);
     await runProcess('npm', ['install'], { cwd: cdnPath });
     console.log(`\n✅ CDN Registry created successfully in ./${finalCdnName}\n`);
