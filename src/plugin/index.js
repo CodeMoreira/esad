@@ -2,7 +2,6 @@ const path = require('node:path');
 const fs = require('node:fs');
 const Repack = require('@callstack/repack');
 const { ExpoModulesPlugin } = require('@callstack/repack-plugin-expo-modules');
-const rspack = require('@rspack/core');
 
 /**
  * ESAD Re.Pack Plugin Wrapper (v2.0 - POC Mirror)
@@ -19,7 +18,7 @@ function withESAD(env, options) {
   const pkgPath = path.resolve(dirname, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
   const id = options.id.replace(/-/g, '_');
-  
+
   const sdkPkgPath = path.resolve(__dirname, '..', '..', 'package.json');
   const sdkPkg = JSON.parse(fs.readFileSync(sdkPkgPath, 'utf8'));
   const clientPath = path.resolve(__dirname, '..', 'client', 'index.js');
@@ -40,29 +39,22 @@ function withESAD(env, options) {
           type: 'javascript/auto',
           use: {
             loader: '@callstack/repack/babel-swc-loader',
-            options: {
-              parallel: true,
-              hideParallelModeWarning: true,
-            },
+            options: {},
           },
         },
         ...Repack.getAssetTransformRules(),
       ],
     },
     plugins: [
-      new rspack.DefinePlugin({
-        'process.env.EXPO_OS': JSON.stringify(platform),
-        'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
-      }),
       new Repack.RepackPlugin(),
       new Repack.plugins.ModuleFederationPluginV2({
         name: id,
         filename: `${id}.container.js.bundle`,
         remotes: options.remotes || {},
-        ...(options.type === 'module' ? { 
+        ...(options.type === 'module' ? {
           exposes: options.exposes || {
             './Main': options.entry || './index.js'
-          } 
+          }
         } : {}),
         dts: false,
         dev: isDev,
@@ -71,12 +63,12 @@ function withESAD(env, options) {
           'react/jsx-runtime': { singleton: true, eager: true, requiredVersion: pkg.dependencies.react },
           'react-native': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native'] },
           'react-native-safe-area-context': { singleton: true, eager: true, requiredVersion: pkg.dependencies['react-native-safe-area-context'] },
-          '@codemoreira/esad/client': { 
-            singleton: true, 
+          '@codemoreira/esad/client': {
+            singleton: true,
             eager: options.type === 'host',
             version: sdkPkg.version,
             requiredVersion: sdkPkg.version,
-            import: clientPath 
+            import: clientPath
           },
           ...(options.shared || {})
         }
