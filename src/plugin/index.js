@@ -39,6 +39,7 @@ function withESAD(env, options) {
           type: 'javascript/auto',
           use: {
             loader: '@callstack/repack/babel-swc-loader',
+            parallel: true,
             options: {},
           },
         },
