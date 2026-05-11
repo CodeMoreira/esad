@@ -24,6 +24,13 @@ function withESAD(env, options) {
   const envPath = path.resolve(dirname, '.env');
   const envVars = dotenv.config({ path: envPath }).parsed || {};
 
+  // INJECT into global process.env so that babel-preset-expo doesn't replace them with undefined!
+  Object.keys(envVars).forEach(key => {
+    if (process.env[key] === undefined) {
+      process.env[key] = envVars[key];
+    }
+  });
+
   const publicEnvs = {};
   // Map variables from .env file and system variables that start with EXPO_PUBLIC_
   const allSources = { ...process.env, ...envVars };
@@ -61,19 +68,18 @@ function withESAD(env, options) {
             loader: '@callstack/repack/babel-swc-loader',
             parallel: true,
             options: {
-              env: {
-                EXPO_OS: platform,
-              },
-              // Injetamos um plugin extra de transformação apenas para o EXPO_OS
-              plugins: [
-                [
-                  require.resolve('babel-plugin-transform-define'),
-                  {
-                    'process.env.EXPO_OS': platform,
-                    ...publicEnvs,
-                  },
+              babelOverrides: {
+                // Inject a extra transformation plugin only for EXPO_OS
+                plugins: [
+                  [
+                    require.resolve('babel-plugin-transform-define'),
+                    {
+                      'process.env.EXPO_OS': JSON.stringify(platform),
+                      ...publicEnvs,
+                    },
+                  ],
                 ],
-              ],
+              }
             },
           },
         },
@@ -82,7 +88,7 @@ function withESAD(env, options) {
     },
     plugins: [
       new Repack.RepackPlugin(),
-      new rspack.DefinePlugin(publicEnvs),
+      new rspack.DefinePlugin({ ...publicEnvs, 'process.env.EXPO_OS': JSON.stringify(platform) }),
       new Repack.plugins.ModuleFederationPluginV2({
         name: id,
         filename: `${id}.container.js.bundle`,
