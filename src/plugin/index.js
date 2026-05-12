@@ -32,12 +32,14 @@ function withESAD(env, options) {
   });
 
   const publicEnvs = {};
+  const babelEnvs = {};
   // Map variables from .env file and system variables that start with EXPO_PUBLIC_
   const allSources = { ...process.env, ...envVars };
 
   Object.keys(allSources).forEach((key) => {
     if (key.startsWith('EXPO_PUBLIC_')) {
       publicEnvs[`process.env.${key}`] = JSON.stringify(allSources[key] || '');
+      babelEnvs[`process.env.${key}`] = allSources[key] || '';
     }
   });
   // --------------------------------
@@ -74,8 +76,8 @@ function withESAD(env, options) {
                   [
                     require.resolve('babel-plugin-transform-define'),
                     {
-                      'process.env.EXPO_OS': JSON.stringify(platform),
-                      ...publicEnvs,
+                      'process.env.EXPO_OS': platform,
+                      ...babelEnvs,
                     },
                   ],
                 ],
