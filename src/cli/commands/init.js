@@ -30,15 +30,63 @@ export default {
   devMode: {},
 
   // 2. Programmable Deployment
-  // Receives the compiled bundle.
+  // Target: Simple-CDN (V2)
   async deploy(bundle, { version, moduleId, options }) {
-    console.log('🚀 Starting custom upload for ' + moduleId + '...');
-    // return { status: 'mock_success', moduleId, version };
+    const axios = require('axios');
+    const FormData = require('form-data');
+    const fs = require('fs');
+
+    console.log('🚀 Deploying ' + moduleId + '@' + version + ' to Simple-CDN...');
+
+    const form = new FormData();
+    form.append('bundle', fs.createReadStream(bundle));
+    form.append('version', version);
+
+    // Variables loaded from workspace .env
+    const registryUrl = process.env.REGISTRY_URL || 'http://localhost:3000';
+    const deployToken = process.env.REGISTRY_DEPLOY_TOKEN;
+
+    if (!deployToken) {
+      throw new Error('❌ REGISTRY_DEPLOY_TOKEN not found in environment. Generate one in the CDN Dashboard.');
+    }
+
+    try {
+      const response = await axios.post(
+        \`\${registryUrl}/api/admin/modules/\${moduleId}/versions\`, 
+        form, 
+        {
+          headers: {
+            ...form.getHeaders(),
+            'Authorization': \`Bearer \${deployToken}\`
+          }
+        }
+      );
+      console.log('✅ ' + moduleId + ' deployed successfully: ' + response.data.status);
+      return response.data;
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || err.message;
+      throw new Error('❌ Deployment failed: ' + errorMsg);
+    }
   }
 };
 `;
     fs.writeFileSync(configPath, configTemplate);
     console.log(`✅ Generated programmable configuration: esad.config.js`);
+  }
+
+  const envExamplePath = path.join(workspaceDir, '.env.example');
+  if (!fs.existsSync(envExamplePath)) {
+    const envTemplate = `# ESAD Infrastructure Configuration
+# ---------------------------------
+# The URL of your Simple-CDN / Registry
+REGISTRY_URL=http://localhost:3000
+
+# Your API Deployment Token (Generate this in the Registry Dashboard)
+# This is required for the 'esad deploy' command to work.
+REGISTRY_DEPLOY_TOKEN=your_token_here
+`;
+    fs.writeFileSync(envExamplePath, envTemplate);
+    console.log(`✅ Generated .env.example`);
   }
 
   const gitignorePath = path.join(workspaceDir, '.gitignore');
