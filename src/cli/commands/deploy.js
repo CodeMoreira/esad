@@ -15,6 +15,9 @@ module.exports = async (options) => {
   const config = await configObj.load();
   const workspaceRoot = configObj.root;
   const projectName = config.default?.projectName || config.projectName;
+
+  // Load environment variables from the workspace root
+  require('dotenv').config({ path: path.join(workspaceRoot, '.env') });
   
   let moduleId = options.id;
   let cwd = process.cwd();
