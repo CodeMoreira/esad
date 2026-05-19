@@ -31,15 +31,11 @@ export default {
 
   // 2. Programmable Deployment
   // Target: Simple-CDN (V2)
-  async deploy(bundle, { version, moduleId, options }) {
-    const axios = require('axios');
-    const FormData = require('form-data');
-    const fs = require('fs');
-
+  async deploy(bundleBuffer, { version, moduleId, options, axios, FormData }) {
     console.log('🚀 Deploying ' + moduleId + '@' + version + ' to Simple-CDN...');
 
     const form = new FormData();
-    form.append('bundle', fs.createReadStream(bundle));
+    form.append('bundle', bundleBuffer, { filename: 'bundle.zip' });
     form.append('version', version);
 
     // Variables loaded from workspace .env

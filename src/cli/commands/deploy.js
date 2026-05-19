@@ -64,10 +64,15 @@ module.exports = async (options) => {
 
   try {
     console.log(`📡 Invoking custom 'deploy' hook...`);
+    const axios = require('axios');
+    const FormData = require('form-data');
+    
     const result = await deployHook(buffer, { 
       version, 
       moduleId: resolvedModuleId, 
-      options 
+      options,
+      axios,
+      FormData
     });
     
     console.log(chalk.green(`\n✅ Deployment successful!`));
