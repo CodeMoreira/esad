@@ -20,6 +20,9 @@ module.exports = async (options) => {
   require('dotenv').config({ path: path.join(workspaceRoot, '.env') });
   
   let moduleId = options.id;
+  if (moduleId && !moduleId.startsWith(`${projectName}-`)) {
+    moduleId = `${projectName}-${moduleId}`;
+  }
   let cwd = process.cwd();
 
   // Resolve Context
@@ -30,6 +33,7 @@ module.exports = async (options) => {
       process.exit(1);
     }
     cwd = meta.path;
+    moduleId = meta.id;
   }
 
   const pkgPath = path.join(cwd, 'package.json');
