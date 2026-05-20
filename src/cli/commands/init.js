@@ -31,12 +31,11 @@ export default {
 
   // 2. Programmable Deployment
   // Target: Simple-CDN (V2)
-  async deploy(bundleBuffer, { version, moduleId, options, axios, FormData }) {
-    console.log('🚀 Deploying ' + moduleId + '@' + version + ' to Simple-CDN...');
+  async deploy(bundleBuffer, { moduleId, options, axios, FormData }) {
+    console.log('🚀 Deploying ' + moduleId + ' to Simple-CDN (Development)...');
 
     const form = new FormData();
     form.append('bundle', bundleBuffer, { filename: 'bundle.zip' });
-    form.append('version', version);
 
     // Variables loaded from workspace .env
     const registryUrl = process.env.REGISTRY_URL || 'http://localhost:3000';
@@ -48,7 +47,7 @@ export default {
 
     try {
       const response = await axios.post(
-        \`\${registryUrl}/api/admin/modules/\${moduleId}/versions\`, 
+        \`\${registryUrl}/api/admin/modules/\${moduleId}/dev\`, 
         form, 
         {
           headers: {

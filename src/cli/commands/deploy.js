@@ -40,9 +40,8 @@ module.exports = async (options) => {
 
   const pkg = fs.readJsonSync(pkgPath);
   const resolvedModuleId = moduleId || pkg.name;
-  const version = options.version || pkg.version;
 
-  console.log(`\n🚀 Starting ESAD Deploy for ${chalk.cyan(resolvedModuleId)} (v${version})\n`);
+  console.log(`\n🚀 Starting ESAD Deploy for ${chalk.cyan(resolvedModuleId)}\n`);
 
   const distPath = path.join(cwd, 'build');
   if (!fs.existsSync(distPath)) {
@@ -71,7 +70,6 @@ module.exports = async (options) => {
     const FormData = require('form-data');
     
     const result = await deployHook(buffer, { 
-      version, 
       moduleId: resolvedModuleId, 
       options,
       axios,

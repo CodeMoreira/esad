@@ -51,7 +51,6 @@ program
 program
   .command('deploy [id]')
   .option('-i, --id <moduleId>', 'The Module ID to deploy')
-  .option('-v, --version <version>', 'Specific version to deploy')
   .description('Executes the programmable deploy hook')
   .action(async (id, options) => {
     const opts = { ...options, id: id || options.id };
